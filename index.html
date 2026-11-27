@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Public hosting must also set HTTP response headers:
        Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; require-trusted-types-for 'script'
-       (connect-src 'self' is strictly for same-origin ./data/market.json — zero external hosts allowed.)
+       (connect-src 'self' is strictly for same-origin ./data/market.json and ./data/offers.json — zero external hosts allowed.)
        X-Content-Type-Options: nosniff
        Referrer-Policy: no-referrer -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
@@ -291,10 +291,10 @@
     <section class="section section-alt" id="bulletin-board" aria-labelledby="board-heading">
       <div class="container">
         <div class="section-head">
-          <span class="section-eyebrow">Static preview · Read-only handoff</span>
+          <span class="section-eyebrow">Same-origin snapshot · Read-only handoff</span>
           <h2 class="section-title" id="board-heading">Public Bulletin Board &amp; Invite Code Workbench</h2>
           <p class="section-lead">
-            Inspect or format public <code>no1dinv1:</code> invitation codes compatible with No1d Swap <span data-release-version>v0.2.0</span> (upcoming). Everything displayed here is informational only—never deposit to any address shown on a web page. The desktop program reads every term from the code and both chains itself.
+            Browse same-origin Nostr offer snapshots from <code>./data/offers.json</code> (with Sepolia-only built-in samples) and inspect or format public <code>no1dinv1:</code> invitation codes compatible with No1d Swap <span data-release-version>v0.2.0</span> (upcoming). Everything displayed here is informational only—never deposit to any address shown on a web page. The desktop program reads every term from the code and both chains itself.
           </p>
         </div>
 
@@ -302,10 +302,10 @@
           <div class="callout callout-due" role="note" aria-label="Bulletin board trust boundary and miner limit">
             <span class="callout-title">A listing is not a check. The program checks the terms; the miner limit still applies to the ETH side.</span>
             <p class="callout-body">
-              Public, untrusted bulletin board preview. Offers listed here are unverified — the desktop app checks amounts, caps, the pinned contract, and address format locally (plus Parano1d mining share before Bob approves), not whether a counterparty is honest. One producer has recently mined about <strong>75%</strong> of Parano1d blocks (measured 2026-11-23 UTC); above half of the hashrate, a stranger acting as Alice can cheat Bob (the ETH side), and the desktop app refuses Bob's approval on mainnet above 65%.
+              Public, untrusted bulletin board. Offers listed here are unverified — the desktop app checks amounts, caps, the pinned contract, and address format locally (plus Parano1d mining share before Bob approves), not whether a counterparty is honest. One producer has recently mined about <strong>75%</strong> of Parano1d blocks (measured 2026-11-23 UTC); above half of the hashrate, a stranger acting as Alice can cheat Bob (the ETH side), and the desktop app refuses Bob's approval on mainnet above 65%.
             </p>
             <p class="callout-body">
-              <strong>Fake and copied offers:</strong> Anyone can post. A listing's age, note, and displayed size are untrusted text. Any <code>no1d-invite:</code> link is <strong>pre-fill only</strong> (identical to pasting the code—it never approves, deposits, starts a step, or skips the check-line match), and the OS URI handler lives in the desktop program. If public listings are later fed from Nostr relays (separate from the program's private test board), the board will display each poster's public key and flag duplicate <code>no1dinv1:</code> payloads so copies of someone else's offer can be told apart.
+              <strong>Fake and copied offers:</strong> Anyone can post. A listing's age, note, and displayed size are untrusted text. Any <code>no1d-invite:</code> link is <strong>pre-fill only</strong> (identical to pasting the code—it never approves, deposits, starts a step, or skips the check-line match), and the OS URI handler lives in the desktop program. Live public offers are collected out-of-band by a host job from Nostr relays (separate from the desktop program's private test board) into same-origin <code>./data/offers.json</code>, re-validated in your browser, and shown with each poster's public key, NIP-13 PoW bits, liveness status, and explicit warnings for copied/duplicate <code>no1dinv1:</code> payloads or repeated Bob addresses.
             </p>
           </div>
 

@@ -1,8 +1,9 @@
 /**
- * No1d Swap Public Website — Static Offer Bulletin Board & Invite Code Workbench
+ * No1d Swap Public Website — Public Offer Bulletin Board & Invite Code Workbench
  *
- * Mounts two 100% client-side, zero-network, XSS-safe widgets:
- *   1. `#bulletin-board-root` — filterable/sortable static offer bulletin board
+ * Mounts two client-side, same-origin-only, XSS-safe widgets:
+ *   1. `#bulletin-board-root` — filterable/sortable bulletin board loading
+ *      same-origin `./data/offers.json` alongside Sepolia-only built-in samples
  *   2. `#invite-tool-root`    — tabbed Invite Code Inspector & Sepolia Test Builder
  *
  * Security invariants:
@@ -12,7 +13,8 @@
  *   `decodeInvite(offer.code)` after enforcing `requirePinnedContract()`.
  *   Untrusted card metadata fields (amounts, addresses, URIs) are ignored.
  * - Unpinned HTLC contracts are refused across both cards and the Inspector.
- * - Zero external requests, zero storage of secrets, zero wallet connections.
+ * - Strictly same-origin (`./data/offers.json` on `'self'`), zero third-party
+ *   requests, zero storage of secrets, zero wallet connections.
  * - `no1d-invite:` links are pre-fill only and are dispatched only when the user
  *   explicitly clicks the link inside the handoff modal.
  */
@@ -34,10 +36,17 @@ import {
 } from "./invite-codec.js";
 import {
   canShowOfferReferenceDiff,
+  formatAgeLabel,
   formatReferenceDiff,
   getCurrentSnapshot,
   onSnapshotChange,
 } from "./market-data.js";
+import {
+  OFFERS_SNAPSHOT_URL,
+  formatPubkeyShort,
+  loadSameOriginOffersSnapshot,
+  setCurrentOffersSnapshot,
+} from "./offers-data.js";
 import { DEMO_OFFERS, PROTOCOL_CONSTANTS } from "./sample-offers.js";
 
 let unsubscribeMarketSnapshot = null;
@@ -179,11 +188,59 @@ export function resolveOfferForDisplay(offer) {
 
   const isSample =
     Boolean(offer.demo) || SAMPLE_CANONICAL_CODES.has(decoded.canonicalCode);
+  const isLive = Boolean(offer.live) && !isSample && !offer.local;
+  const pubkey =
+    isLive && typeof offer.pubkey === "string" && /^[0-9a-f]{64}$/.test(offer.pubkey)
+      ? offer.pubkey
+      : "";
+  const eventId =
+    isLive && typeof offer.eventId === "string" && /^[0-9a-f]{64}$/.test(offer.eventId)
+      ? offer.eventId
+      : "";
+  const powBits =
+    isLive &&
+    typeof offer.powBits === "number" &&
+    Number.isInteger(offer.powBits) &&
+    offer.powBits >= 0 &&
+    offer.powBits <= 256
+      ? offer.powBits
+      : null;
 
   return {
-    id: typeof offer.id === "string" ? sanitizeDisplayText(offer.id, 48) : "",
+    id: typeof offer.id === "string" ? sanitizeDisplayText(offer.id, 64) : eventId,
     demo: isSample,
     local: Boolean(offer.local) && !isSample,
+    live: isLive,
+    eventId,
+    pubkey,
+    pubkeyShort: pubkey ? formatPubkeyShort(pubkey) : "",
+    powBits,
+    expiresAtUtc:
+      isLive && typeof offer.expiresAtUtc === "string" ? offer.expiresAtUtc : "",
+    liveness:
+      isLive && offer.liveness && typeof offer.liveness === "object"
+        ? {
+            status:
+              offer.liveness.status === "online" ||
+              offer.liveness.status === "recent" ||
+              offer.liveness.status === "stale"
+                ? offer.liveness.status
+                : "stale",
+            lastSeenAtUtc:
+              typeof offer.liveness.lastSeenAtUtc === "string"
+                ? offer.liveness.lastSeenAtUtc
+                : "",
+            hasHeartbeat: offer.liveness.hasHeartbeat === true,
+          }
+        : null,
+    relays:
+      isLive && Array.isArray(offer.relays)
+        ? offer.relays
+            .filter((r) => typeof r === "string")
+            .slice(0, 8)
+            .map((r) => sanitizeDisplayText(r, 128))
+            .filter(Boolean)
+        : [],
     postedAtUtc: typeof offer.postedAtUtc === "string" ? offer.postedAtUtc : "",
     observedAtMs:
       typeof offer._observedAtMs === "number" && Number.isFinite(offer._observedAtMs)
@@ -220,6 +277,10 @@ function getToastRegion() {
 
 function showToast(message) {
   const region = getToastRegion();
+  // Keep toast stack lean (at most 2 visible, matching site.js)
+  while (region.children.length >= 2) {
+    region.removeChild(region.firstElementChild || region.firstChild);
+  }
   const toast = el("div", { className: "toast", text: message });
   region.appendChild(toast);
   window.setTimeout(() => {
@@ -271,13 +332,13 @@ function flashCopiedButton(btn, originalLabel) {
   btn.dataset.copyTimer = String(timer);
 }
 
-async function handleCopyAction(text, btn, originalLabel, toastMessage) {
+async function handleCopyAction(text, btn, originalLabel, toastMessage, fallbackLabel = "code") {
   const ok = await copyToClipboard(text);
   if (ok) {
     flashCopiedButton(btn, originalLabel);
     showToast(toastMessage);
   } else {
-    showToast("Copy blocked by browser — select and copy the code manually.");
+    showToast(`Copy blocked by browser — select and copy the ${fallbackLabel} manually.`);
   }
 }
 
@@ -539,7 +600,9 @@ function createHandoffModalController() {
 
 /**
  * Mounts the Bulletin Board and Invite Code Workbench widgets.
- * @param {{ extraOffers?: Array<object> }} [options]
+ * Loads same-origin `./data/offers.json` via `loadSameOriginOffersSnapshot()`
+ * and re-validates every entry strictly through `decodeInvite()`.
+ * @param {{ extraOffers?: Array<object>, offersSnapshot?: object, fetchOffersImpl?: typeof fetch, nowMs?: number }} [options]
  */
 export function mountBoardWidgets(options = {}) {
   const boardRoot = document.getElementById("bulletin-board-root");
@@ -549,7 +612,10 @@ export function mountBoardWidgets(options = {}) {
   const modal = createHandoffModalController();
 
   // Shared reactive state (in-memory only; never persisted or transmitted)
-  const mountTimeMs = Date.now();
+  const mountTimeMs =
+    typeof options.nowMs === "number" && Number.isFinite(options.nowMs)
+      ? Math.floor(options.nowMs)
+      : Date.now();
   const initialExtra = Array.isArray(options.extraOffers)
     ? options.extraOffers.map((item) =>
         item && typeof item === "object"
@@ -560,6 +626,9 @@ export function mountBoardWidgets(options = {}) {
   const state = {
     networkFilter: "all",
     sortBy: "newest",
+    offersSnapshot: null,
+    offersLoading: false,
+    liveOffers: [],
     extraOffers: initialExtra,
     localOffers: [],
     activeTab: "inspect",
@@ -572,7 +641,7 @@ export function mountBoardWidgets(options = {}) {
   let loadIntoInspector = () => {};
 
   // =========================================================================
-  // 1. Static Offer Bulletin Board (`#bulletin-board-root`)
+  // 1. Public Offer Bulletin Board (`#bulletin-board-root`)
   // =========================================================================
   if (boardRoot) {
     clearNode(boardRoot);
@@ -659,13 +728,19 @@ export function mountBoardWidgets(options = {}) {
       sortSelect,
     ]);
 
+    const refreshOffersBtn = el("button", {
+      type: "button",
+      className: "btn btn-ghost btn-sm",
+      text: "Refresh offers",
+    });
+
     const toolbar = el("div", { className: "board-toolbar" }, [
       filterGroup,
-      sortControl,
+      el("div", { className: "filter-group" }, [sortControl, refreshOffersBtn]),
     ]);
     shell.appendChild(toolbar);
 
-    // Status bar (live count + sample/local badges)
+    // Status bar (live Nostr snapshot status + sample/local badges)
     const statusText = el("span");
     const statusBadges = el("div", { className: "offer-badges" });
     const statusBar = el(
@@ -680,10 +755,69 @@ export function mountBoardWidgets(options = {}) {
 
     boardRoot.appendChild(shell);
 
+    function applyOffersSnapshot(snap) {
+      state.offersSnapshot = snap || null;
+      setCurrentOffersSnapshot(state.offersSnapshot);
+      const observedMs =
+        typeof options.nowMs === "number" && Number.isFinite(options.nowMs)
+          ? Math.floor(options.nowMs)
+          : Date.now();
+      if (snap && snap.ok && !snap.isSample && snap.offersVisible && Array.isArray(snap.offers)) {
+        state.liveOffers = snap.offers.map((o) => ({
+          id: o.eventId,
+          demo: false,
+          local: false,
+          live: true,
+          eventId: o.eventId,
+          pubkey: o.pubkey,
+          powBits: o.powBits,
+          expiresAtUtc: o.expiresAtUtc,
+          liveness: o.liveness,
+          relays: o.relays,
+          postedAtUtc: o.createdAtUtc,
+          note: o.note,
+          code: o.code,
+          _observedAtMs: observedMs,
+        }));
+      } else {
+        state.liveOffers = [];
+      }
+      renderBoardList();
+    }
+
+    async function fetchAndRenderOffers() {
+      if (state.offersLoading) return null;
+      state.offersLoading = true;
+      refreshOffersBtn.disabled = true;
+      refreshOffersBtn.textContent = "Refreshing…";
+      try {
+        const snap = await loadSameOriginOffersSnapshot(
+          OFFERS_SNAPSHOT_URL,
+          options.fetchOffersImpl,
+          options.nowMs,
+        );
+        applyOffersSnapshot(snap);
+        return snap;
+      } finally {
+        state.offersLoading = false;
+        refreshOffersBtn.disabled = false;
+        refreshOffersBtn.textContent = "Refresh offers";
+      }
+    }
+
+    refreshOffersBtn.addEventListener("click", () => {
+      fetchAndRenderOffers();
+    });
+
     function getResolvedOffers() {
       // Decode every listing strictly from offer.code; silently drop invalid
       // or unpinned-contract entries.
-      const raw = [...state.localOffers, ...state.extraOffers, ...DEMO_OFFERS];
+      const raw = [
+        ...state.localOffers,
+        ...state.liveOffers,
+        ...state.extraOffers,
+        ...DEMO_OFFERS,
+      ];
       const resolved = [];
       for (const item of raw) {
         const entry = resolveOfferForDisplay(item);
@@ -692,8 +826,35 @@ export function mountBoardWidgets(options = {}) {
       return resolved;
     }
 
+    function buildLivenessBadge(liveness) {
+      if (!liveness) return null;
+      const lastSeenSuffix = liveness.lastSeenAtUtc
+        ? ` · last signed activity ${formatUtcTimestamp(liveness.lastSeenAtUtc)}`
+        : "";
+      const hbSuffix = liveness.hasHeartbeat ? " (signed heartbeat)" : " (from offer timestamp)";
+      if (liveness.hasHeartbeat && liveness.status === "online") {
+        return el("span", {
+          className: "badge badge-neutral",
+          title: `Signed maker heartbeat within 15 min${lastSeenSuffix}`,
+          text: "Maker online",
+        });
+      }
+      if (liveness.status === "online" || liveness.status === "recent") {
+        return el("span", {
+          className: "badge badge-neutral",
+          title: `Maker active within 2 h${lastSeenSuffix}${hbSuffix}`,
+          text: "Maker recent",
+        });
+      }
+      return el("span", {
+        className: "badge badge-due",
+        title: `Maker last active > 2 h ago${lastSeenSuffix}${hbSuffix}`,
+        text: "Maker stale",
+      });
+    }
+
     function buildOfferCard(entry, dupFlags) {
-      const { decoded, demo, local, note, postedAtUtc } = entry;
+      const { decoded, demo, local, live, note, postedAtUtc } = entry;
       const f = decoded.fields;
       const canonicalCode = decoded.canonicalCode;
       const hasSampleBobAddr = usesSampleBobAddress(f);
@@ -714,10 +875,15 @@ export function mountBoardWidgets(options = {}) {
               className: "badge badge-local",
               text: "Local preview",
             })
-          : el("span", {
-              className: "badge badge-neutral",
-              text: "Posted listing, not checked",
-            });
+          : live
+            ? el("span", {
+                className: "badge badge-neutral",
+                text: "Live Nostr offer (untrusted)",
+              })
+            : el("span", {
+                className: "badge badge-neutral",
+                text: "Posted listing, not checked",
+              });
 
       const badges = [
         el("span", {
@@ -739,11 +905,37 @@ export function mountBoardWidgets(options = {}) {
         );
       }
 
+      if (live && entry.powBits !== null) {
+        badges.push(
+          el("span", {
+            className: "badge badge-neutral",
+            title: `NIP-13 proof of work: ${entry.powBits} leading zero bits`,
+            text: `PoW ${entry.powBits}b`,
+          }),
+        );
+      }
+
+      if (live && entry.liveness) {
+        const livenessBadge = buildLivenessBadge(entry.liveness);
+        if (livenessBadge) badges.push(livenessBadge);
+      }
+
       if (dupFlags.duplicatePayload) {
+        const keyCount = dupFlags.distinctPubkeys || 0;
+        const dupCount = dupFlags.duplicateCount || 2;
+        const dupText =
+          keyCount > 1
+            ? `Same code from ${keyCount} keys`
+            : `Duplicate payload (${dupCount}×)`;
+        const dupTitle =
+          keyCount > 1
+            ? `Same no1dinv1: code appears from ${keyCount} keys (${dupCount} listings); timestamps are self-declared`
+            : `Same no1dinv1: code appears in ${dupCount} listings; timestamps are self-declared`;
         badges.push(
           el("span", {
             className: "badge badge-alarm",
-            text: "Duplicate payload",
+            title: dupTitle,
+            text: dupText,
           }),
         );
       }
@@ -752,6 +944,7 @@ export function mountBoardWidgets(options = {}) {
         badges.push(
           el("span", {
             className: "badge badge-due",
+            title: "Bob's NOID or ETH payout address appears in more than one listing",
             text: "Repeated Bob address",
           }),
         );
@@ -832,6 +1025,62 @@ export function mountBoardWidgets(options = {}) {
 
       const cardChildren = [head, pair];
 
+      // Nostr poster pubkey & expiry strip for live Nostr offers
+      if (live && entry.pubkey) {
+        const copyPubkeyBtn = el("button", {
+          type: "button",
+          className: "btn btn-copy btn-sm",
+          text: "Copy pubkey",
+        });
+        copyPubkeyBtn.addEventListener("click", () => {
+          handleCopyAction(
+            entry.pubkey,
+            copyPubkeyBtn,
+            "Copy pubkey",
+            "Copied Nostr poster public key (64-hex).",
+            "pubkey",
+          );
+        });
+
+        const metaChildren = [
+          el("span", { className: "offer-pubkey-group" }, [
+            el("span", { className: "offer-meta", text: "Poster pubkey:" }),
+            el("code", {
+              className: "offer-pubkey-val",
+              title: entry.pubkey,
+              text: entry.pubkeyShort,
+            }),
+            copyPubkeyBtn,
+          ]),
+        ];
+
+        if (entry.expiresAtUtc) {
+          metaChildren.push(
+            el("span", {
+              className: "offer-meta num",
+              text: `Expires ${formatUtcTimestamp(entry.expiresAtUtc, Number.MAX_SAFE_INTEGER)}`,
+            }),
+          );
+        }
+
+        cardChildren.push(el("div", { className: "offer-nostr-meta" }, metaChildren));
+      }
+
+      if (dupFlags.duplicatePayload) {
+        const keyCount = dupFlags.distinctPubkeys || 0;
+        const dupCount = dupFlags.duplicateCount || 2;
+        const dupNotice =
+          keyCount > 1
+            ? `Same code from ${keyCount} keys (${dupCount} listings); times are self-declared.`
+            : `Same code appears in ${dupCount} listings; times are self-declared.`;
+        cardChildren.push(
+          el("p", {
+            className: "offer-copy-warn",
+            text: dupNotice,
+          }),
+        );
+      }
+
       if (note) {
         cardChildren.push(
           el("p", {
@@ -841,8 +1090,8 @@ export function mountBoardWidgets(options = {}) {
         );
       }
 
-      // Expandable full Bob addresses & contract — decoded only, informational only
-      const detailsBody = el("div", { className: "offer-details-body" }, [
+      // Expandable full Bob addresses, HTLC contract & Nostr metadata — informational only
+      const detailRows = [
         el("div", { className: "offer-addr-row" }, [
           el("span", {
             className: "offer-addr-label",
@@ -864,16 +1113,57 @@ export function mountBoardWidgets(options = {}) {
           }),
           el("span", { className: "offer-addr-val", text: f.contract }),
         ]),
+      ];
+
+      if (live && entry.pubkey) {
+        detailRows.push(
+          el("div", { className: "offer-addr-row" }, [
+            el("span", {
+              className: "offer-addr-label",
+              text: "Nostr poster x-only public key (BIP-340 verified by host job)",
+            }),
+            el("span", { className: "offer-addr-val", text: entry.pubkey }),
+          ]),
+        );
+      }
+      if (live && entry.eventId) {
+        detailRows.push(
+          el("div", { className: "offer-addr-row" }, [
+            el("span", {
+              className: "offer-addr-label",
+              text: "Nostr event ID (NIP-01 SHA-256)",
+            }),
+            el("span", { className: "offer-addr-val", text: entry.eventId }),
+          ]),
+        );
+      }
+      if (live && entry.relays && entry.relays.length > 0) {
+        detailRows.push(
+          el("div", { className: "offer-addr-row" }, [
+            el("span", {
+              className: "offer-addr-label",
+              text: "Observed on relays (host crawler)",
+            }),
+            el("span", { className: "offer-addr-val", text: entry.relays.join(", ") }),
+          ]),
+        );
+      }
+
+      detailRows.push(
         el("span", {
           className: "form-hint",
           text:
             "Informational only — never send coins to an address copied from this page. The desktop program reads every term from the invite code and chains.",
         }),
-      ]);
+      );
+
+      const detailsBody = el("div", { className: "offer-details-body" }, detailRows);
 
       const details = el("details", { className: "offer-details" }, [
         el("summary", {
-          text: "Show full Bob payout addresses & HTLC contract",
+          text: live
+            ? "Show full Bob payout addresses, HTLC contract & Nostr metadata"
+            : "Show full Bob payout addresses & HTLC contract",
         }),
         detailsBody,
       ]);
@@ -956,17 +1246,32 @@ export function mountBoardWidgets(options = {}) {
     renderBoardList = () => {
       const all = getResolvedOffers();
 
-      // Duplicate detection on canonicalCode AND decoded Bob addresses
-      const codeCounts = new Map();
+      // Independent duplicate/copied offer & repeated Bob address detection across ALL listings
+      const byCode = new Map();
       const bobNoidCounts = new Map();
       const bobEthCounts = new Map();
       for (const entry of all) {
         const c = entry.decoded.canonicalCode;
+        let group = byCode.get(c);
+        if (!group) {
+          group = [];
+          byCode.set(c, group);
+        }
+        group.push(entry);
+
         const bn = entry.decoded.fields.bob_noid;
         const be = entry.decoded.fields.bob_eth.toLowerCase();
-        codeCounts.set(c, (codeCounts.get(c) || 0) + 1);
         bobNoidCounts.set(bn, (bobNoidCounts.get(bn) || 0) + 1);
         bobEthCounts.set(be, (bobEthCounts.get(be) || 0) + 1);
+      }
+
+      const codeMeta = new Map();
+      for (const [c, group] of byCode.entries()) {
+        const pubkeys = new Set(group.map((g) => g.pubkey).filter(Boolean));
+        codeMeta.set(c, {
+          count: group.length,
+          distinctPubkeys: pubkeys.size,
+        });
       }
 
       const filtered = all.filter((entry) => {
@@ -990,22 +1295,54 @@ export function mountBoardWidgets(options = {}) {
         );
       });
 
+      const liveCount = all.filter((e) => e.live).length;
       const sampleCount = all.filter((e) => e.demo).length;
       const localCount = all.filter((e) => e.local).length;
-      const postedCount = all.filter((e) => !e.demo && !e.local).length;
+      const postedCount = all.filter((e) => !e.demo && !e.local && !e.live).length;
 
       // Update status bar
-      const summaryParts = [`${sampleCount} Sepolia sample`];
+      const summaryParts = [];
+      if (liveCount > 0) summaryParts.push(`${liveCount} live Nostr`);
+      summaryParts.push(`${sampleCount} Sepolia sample`);
       if (postedCount > 0) summaryParts.push(`${postedCount} posted`);
-      summaryParts.push(`${localCount} local preview`);
+      if (localCount > 0) summaryParts.push(`${localCount} local preview`);
       statusText.textContent = `Showing ${sorted.length} of ${all.length} listings (${summaryParts.join(" · ")})`;
+
       clearNode(statusBadges);
-      statusBadges.appendChild(
-        el("span", {
-          className: "badge badge-demo",
-          text: "Static sample board (Sepolia only)",
-        }),
-      );
+      const snap = state.offersSnapshot;
+      if (snap && snap.ok && !snap.isSample && snap.offersVisible) {
+        const agePart = formatAgeLabel(snap.ageMs);
+        statusBadges.appendChild(
+          el("span", {
+            className: snap.isStale ? "badge badge-due" : "badge badge-neutral",
+            text: snap.isStale
+              ? `Live Nostr snapshot · ${agePart} · stale`
+              : `Live Nostr snapshot · ${agePart}`,
+          }),
+        );
+      } else if (snap && snap.ok && snap.isExpired) {
+        statusBadges.appendChild(
+          el("span", {
+            className: "badge badge-alarm",
+            text: "Live offers unavailable (> 6 h)",
+          }),
+        );
+      } else if (snap && !snap.ok) {
+        statusBadges.appendChild(
+          el("span", {
+            className: "badge badge-neutral",
+            text: "Live offers unavailable · Sepolia samples shown",
+          }),
+        );
+      } else {
+        statusBadges.appendChild(
+          el("span", {
+            className: "badge badge-demo",
+            text: "Sample default (no live Nostr offers yet)",
+          }),
+        );
+      }
+
       if (localCount > 0) {
         statusBadges.appendChild(
           el("span", {
@@ -1028,10 +1365,19 @@ export function mountBoardWidgets(options = {}) {
 
       clearNode(offerListEl);
       if (sorted.length === 0) {
-        const emptyMsg =
-          state.networkFilter === "mainnet"
-            ? "No mainnet listings are shown in the static sample board (samples are Sepolia-only). Paste a mainnet code into the Inspector below to check its format."
-            : "No listings match the selected network filter. Switch to All or create a Sepolia test preview below.";
+        let emptyMsg;
+        if (state.networkFilter === "mainnet") {
+          if (snap && snap.ok && snap.isExpired) {
+            emptyMsg =
+              "Live Nostr offers are unavailable because the snapshot is older than 6 h (expired). Refresh offers or paste a mainnet code into the Inspector below.";
+          } else {
+            emptyMsg =
+              "No active mainnet Nostr offers are currently listed (built-in samples are Sepolia-only). Paste a mainnet code into the Inspector below to check its format.";
+          }
+        } else {
+          emptyMsg =
+            "No listings match the selected network filter. Switch to All or create a Sepolia test preview below.";
+        }
         offerListEl.appendChild(
           el("div", { className: "board-empty" }, [el("p", { text: emptyMsg })]),
         );
@@ -1042,18 +1388,29 @@ export function mountBoardWidgets(options = {}) {
         const c = entry.decoded.canonicalCode;
         const bn = entry.decoded.fields.bob_noid;
         const be = entry.decoded.fields.bob_eth.toLowerCase();
-        const duplicatePayload = (codeCounts.get(c) || 0) > 1;
+        const meta = codeMeta.get(c);
+        const duplicatePayload = Boolean(meta && meta.count > 1);
         const repeatedAddress =
-          !duplicatePayload &&
-          ((bobNoidCounts.get(bn) || 0) > 1 ||
-            (bobEthCounts.get(be) || 0) > 1);
+          (bobNoidCounts.get(bn) || 0) > 1 ||
+          (bobEthCounts.get(be) || 0) > 1;
         offerListEl.appendChild(
-          buildOfferCard(entry, { duplicatePayload, repeatedAddress }),
+          buildOfferCard(entry, {
+            duplicatePayload,
+            duplicateCount: meta ? meta.count : 1,
+            distinctPubkeys: meta ? meta.distinctPubkeys : 0,
+            repeatedAddress,
+          }),
         );
       }
     };
 
-    renderBoardList();
+    if (options.offersSnapshot) {
+      applyOffersSnapshot(options.offersSnapshot);
+    } else {
+      renderBoardList();
+      fetchAndRenderOffers();
+    }
+
     if (unsubscribeMarketSnapshot) {
       unsubscribeMarketSnapshot();
     }

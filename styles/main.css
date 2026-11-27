@@ -1756,6 +1756,40 @@ section[tabindex="-1"]:focus {
   color: var(--quiet);
 }
 
+.offer-nostr-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-ctl);
+}
+
+.offer-pubkey-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.offer-pubkey-val {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text);
+}
+
+.offer-copy-warn {
+  font-size: var(--fs-xs);
+  color: var(--alarm);
+  background: var(--alarm-bg);
+  border: 1px solid var(--alarm-rule);
+  border-radius: var(--r-ctl);
+  padding: var(--s-2) var(--s-3);
+}
+
 .offer-details {
   border: 1px solid var(--rule);
   border-radius: var(--r-ctl);
