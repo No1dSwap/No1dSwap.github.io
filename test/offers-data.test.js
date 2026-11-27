@@ -120,6 +120,16 @@ function makeRawSnapshot(overrides = {}) {
   };
 }
 
+test("offers snapshot accepts an optional boolean truncated per relay and drops relay entries with a non-boolean one", () => {
+  const base = { url: "wss://relay.example.org", ok: true, events_received: 2, events_accepted: 1 };
+  const parse = (relays) => parseOffersSnapshot(makeRawSnapshot({ relays }), BASE_NOW_MS);
+  assert.equal(parse([base]).relays[0].truncated, false);
+  assert.equal(parse([{ ...base, truncated: true }]).relays[0].truncated, true);
+  assert.equal(parse([{ ...base, truncated: false }]).relays[0].truncated, false);
+  assert.equal(parse([{ ...base, truncated: "true" }]).relays.length, 0);
+  assert.equal(parse([{ ...base, truncated: 1 }]).relays.length, 0);
+});
+
 test("default data/offers.json is clearly sample-labelled, <= 1 MB, has zero fake mainnet offers, and sample snapshots never render as live", () => {
   const raw = fs.readFileSync(OFFERS_JSON_PATH, "utf8");
   assert.ok(Buffer.byteLength(raw, "utf8") <= MAX_OFFERS_BYTES);
@@ -687,6 +697,19 @@ test("DOM-free security audit: zero HTML-string sinks in JS, resolveOfferForDisp
     mountBoardWidgets({ offersSnapshot: sampleSnapWithOffer, nowMs: BASE_NOW_MS });
     assert.doesNotMatch(boardRoot.textContent, /Live Nostr offer \(untrusted\)/);
     assert.doesNotMatch(boardRoot.textContent, /eeeeeeee…eeeeeeee/);
+
+    // A relay reported as truncated shows one short neutral notice; none otherwise
+    const CUT_NOTICE = "Some relay answers were cut short (possibly spam), so offers may be missing.";
+    assert.doesNotMatch(boardRoot.textContent, /cut short/);
+    const truncSnap = parseOffersSnapshot(
+      makeRawSnapshot({
+        relays: [{ url: "wss://relay.example.org", ok: true, events_received: 2, events_accepted: 1, truncated: true }],
+      }),
+      BASE_NOW_MS,
+    );
+    assert.equal(truncSnap.relays[0].truncated, true);
+    mountBoardWidgets({ offersSnapshot: truncSnap, nowMs: BASE_NOW_MS });
+    assert.ok(boardRoot.textContent.includes(CUT_NOTICE));
 
     // 4. Browser defense-in-depth rejects bob_eth === contract and bob_eth === 0x0000...0000
     const makeRawCode = (bobEth) => {

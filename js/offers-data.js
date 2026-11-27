@@ -359,6 +359,7 @@ export function parseOffersSnapshot(raw, nowMs = Date.now()) {
       if (typeof r.url !== "string" || r.url.length === 0 || r.url.length > 256) continue;
       const cleanUrl = r.url.trim();
       if (!SAFE_RELAY_DISPLAY_RE.test(cleanUrl)) continue;
+      if (r.truncated !== undefined && typeof r.truncated !== "boolean") continue;
       relays.push(
         Object.freeze({
           url: cleanUrl,
@@ -367,6 +368,7 @@ export function parseOffersSnapshot(raw, nowMs = Date.now()) {
             Number.isInteger(r.events_received) && r.events_received >= 0 ? r.events_received : 0,
           eventsAccepted:
             Number.isInteger(r.events_accepted) && r.events_accepted >= 0 ? r.events_accepted : 0,
+          truncated: r.truncated === true,
         }),
       );
     }

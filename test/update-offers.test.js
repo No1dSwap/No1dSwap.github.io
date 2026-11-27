@@ -819,7 +819,7 @@ test("queryRelay enforces exact 10 s timeout, 1 MB cumulative cap, event cap, an
   assert.match(bigRes.reason, /1 MB|cap/i);
   assert.equal(bigInst[0].closed, true);
 
-  // 3. Hostile relay sending forged events hits violation cap and disconnects
+  // 3. Badly signed events are a poster-side drop: no violations, the relay stays ok and the valid offer is kept
   const { FakeWebSocket: BadSigWS, instances: badInst } = makeMockWebSocketClass({
     "wss://relay.snort.social": {
       onCreate: (ws) => ws.onopen?.(),
@@ -829,15 +829,57 @@ test("queryRelay enforces exact 10 s timeout, 1 MB cumulative cap, event cap, an
           const subId = parsed[1];
           const forged = { ...goodEv, sig: "0".repeat(128) };
           for (let i = 0; i < 6; i++) ws.deliver(["EVENT", subId, forged]);
+          ws.deliver(["EVENT", subId, goodEv]);
+          ws.deliver(["EOSE", subId]);
         }
       },
     },
   });
   const badRes = await queryRelay("wss://relay.snort.social", filters, { WebSocketImpl: BadSigWS });
-  assert.equal(badRes.ok, false);
-  assert.match(badRes.reason, /violations/i);
-  assert.equal(badRes.events.length, 0);
+  assert.equal(badRes.ok, true);
+  assert.equal(badRes.violations, 0);
+  assert.equal(badRes.droppedPolicy, 6);
+  assert.equal(badRes.events.length, 1);
+  assert.equal(badRes.events[0].id, goodEv.id);
   assert.equal(badInst[0].closed, true);
+
+  // 3b. Close code 1009 (frame too large) after one valid event: truncated but usable
+  const { FakeWebSocket: BigFrameWS } = makeMockWebSocketClass({
+    "wss://relay.big-frame.example": {
+      onCreate: (ws) => ws.onopen?.(),
+      onSend: (ws, msg) => {
+        const parsed = JSON.parse(msg);
+        if (parsed[0] === "REQ") {
+          ws.deliver(["EVENT", parsed[1], goodEv]);
+          ws.onerror?.(new Error("frame too large"));
+          ws.onclose?.({ code: 1009 });
+        }
+      },
+    },
+  });
+  const bigFrameRes = await queryRelay("wss://relay.big-frame.example", filters, { WebSocketImpl: BigFrameWS });
+  assert.equal(bigFrameRes.ok, true);
+  assert.equal(bigFrameRes.truncated, true);
+  assert.equal(bigFrameRes.events.length, 1);
+  assert.equal(bigFrameRes.events[0].id, goodEv.id);
+
+  // 3c. Any other close before EOSE still fails the relay
+  const { FakeWebSocket: EarlyCloseWS } = makeMockWebSocketClass({
+    "wss://relay.early-close.example": {
+      onCreate: (ws) => ws.onopen?.(),
+      onSend: (ws, msg) => {
+        const parsed = JSON.parse(msg);
+        if (parsed[0] === "REQ") {
+          ws.deliver(["EVENT", parsed[1], goodEv]);
+          ws.onclose?.({ code: 1006 });
+        }
+      },
+    },
+  });
+  const earlyRes = await queryRelay("wss://relay.early-close.example", filters, { WebSocketImpl: EarlyCloseWS });
+  assert.equal(earlyRes.ok, false);
+  assert.equal(earlyRes.truncated, false);
+  assert.equal(earlyRes.reason, "socket closed before EOSE");
 
   // 4. Exact 10 s timeout via fake timers aborts hung relay and closes socket
   t.mock.timers.enable({ apis: ["setTimeout"] });
@@ -1444,6 +1486,8 @@ test("Audit regressions: truncation fail-closed, PoW spam resistance, frame cap,
     const failedSummary = runRes.payload.relays.find((r) => r.url === "wss://relay.primal.net");
     assert.equal(failedSummary.ok, false);
     assert.equal(failedSummary.events_accepted, 0);
+    assert.equal(failedSummary.truncated, false);
+    assert.equal(runRes.payload.relays.find((r) => r.url === "wss://nos.lol").truncated, false);
 
     // CLI --output alias works identically to --out (now rate-limited by the live snapshot just written)
     const freshNowIso = new Date(Date.now() - 30_000).toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -1871,6 +1915,7 @@ test("Real loopback WebSocket path: exercises queryRelay + runUpdateOffers over 
   server.on("upgrade", (req, socket) => {
     sockets.add(socket);
     socket.on("close", () => sockets.delete(socket));
+    socket.on("error", () => {});
     seenUpgradeHeaders.push(req.headers);
     const key = req.headers["sec-websocket-key"];
     const accept = crypto
@@ -1947,6 +1992,8 @@ test("Real loopback WebSocket path: exercises queryRelay + runUpdateOffers over 
         maxTotalBytes: 65_536,
         timeoutMs: 3000,
       });
+      assert.equal(overRes.ok, true);
+      assert.equal(overRes.truncated, true);
       assert.equal(overRes.events.length, 0);
       assert.equal(overRes.bytesReceived, 0); // aborted inside ByteParser before JS delivery
     });

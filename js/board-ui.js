@@ -1343,6 +1343,15 @@ export function mountBoardWidgets(options = {}) {
         );
       }
 
+      if (snap && snap.ok && Array.isArray(snap.relays) && snap.relays.some((r) => r.truncated === true)) {
+        statusBadges.appendChild(
+          el("span", {
+            className: "badge badge-neutral",
+            text: "Some relay answers were cut short (possibly spam), so offers may be missing.",
+          }),
+        );
+      }
+
       if (localCount > 0) {
         statusBadges.appendChild(
           el("span", {

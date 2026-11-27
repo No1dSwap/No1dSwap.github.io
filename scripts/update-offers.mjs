@@ -435,6 +435,7 @@ export async function queryRelay(
   return new Promise((resolve) => {
     let ws = null;
     let disposeDispatcher = null;
+    let boundedParser = false;
     let settled = false;
     let opened = false;
     let eose = false;
@@ -515,6 +516,7 @@ export async function queryRelay(
     try {
       const { init, dispose } = createBoundedWsInit(WebSocketImpl, maxFrameBytes);
       disposeDispatcher = dispose;
+      boundedParser = Boolean(init);
       if (init) {
         try {
           ws = new WebSocketImpl(relayUrl, init);
@@ -649,9 +651,10 @@ export async function queryRelay(
             return;
           }
 
-          // Cryptographic NIP-01 id + BIP-340 Schnorr check (forged sig = relay fault)
+          // Cryptographic NIP-01 id + BIP-340 Schnorr check. A poster can publish a
+          // badly signed event to any relay, so this is a poster-side drop, not a relay fault.
           if (!verifyEventFast(ev, verifiedById)) {
-            noteViolation("invalid event id or Schnorr signature");
+            droppedPolicy += 1;
             return;
           }
 
@@ -696,15 +699,26 @@ export async function queryRelay(
       }
     };
 
+    let errored = false;
     ws.onerror = () => {
-      if (!settled && !eose) {
-        finish(false, "socket error");
-      }
+      // An error is followed by a close; the close handler decides (timeout covers no close).
+      errored = true;
     };
 
-    ws.onclose = () => {
-      if (!settled) {
-        finish(eose, eose ? null : "socket closed before EOSE");
+    ws.onclose = (closeEvent) => {
+      if (settled) return;
+      if (eose) {
+        finish(true, null);
+      } else if (
+        closeEvent &&
+        (closeEvent.code === 1009 || (closeEvent.code === 1006 && errored && opened && boundedParser))
+      ) {
+        // Frame larger than the bound (close 1009; Node 24's parser fails the connection with an
+        // error and close 1006 instead): truncated-but-usable, verified events are kept.
+        truncated = true;
+        finish(true, "frame too large");
+      } else {
+        finish(false, errored ? "socket error" : "socket closed before EOSE");
       }
     };
   });
@@ -1410,6 +1424,7 @@ function buildRelaySummary(relayResults, finalOffers) {
     ok: Boolean(r && r.ok),
     events_received: Number.isInteger(r && r.eventsReceived) ? r.eventsReceived : 0,
     events_accepted: acceptedCountByRelay.get(r.url) || 0,
+    truncated: Boolean(r && r.truncated),
   }));
 }
 
