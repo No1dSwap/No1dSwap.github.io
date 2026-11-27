@@ -1,7 +1,8 @@
 # Builds the static site and publishes it to GitHub Pages (no data commits).
-# The market snapshot is refreshed on every run and lives only in the deployed
-# artifact. Note: GitHub disables a scheduled workflow after 60 days without
-# repository activity; re-enable it (or push a commit) when that happens.
+# The market and offers snapshots are refreshed on every run and live only in
+# the deployed artifact. Note: GitHub disables a scheduled workflow after 60
+# days without repository activity; re-enable it (or push a commit) when that
+# happens.
 name: pages
 
 on:
@@ -54,6 +55,21 @@ jobs:
 
       - name: Update market snapshot
         run: node scripts/update-market.mjs --out _site/data/market.json --soft-fail --no-rate-limit
+
+      - name: Fetch the live site's last good offers.json
+        timeout-minutes: 1
+        continue-on-error: true
+        run: |
+          mkdir -p _site/data
+          curl -fsS --max-time 10 --max-filesize 1048576 --proto '=https' "${{ steps.pages.outputs.base_url }}/data/offers.json" -o _site/data/offers.json || rm -f _site/data/offers.json
+
+      - name: Update offers snapshot
+        timeout-minutes: 2
+        continue-on-error: true
+        run: |
+          timeout 90 node scripts/update-offers.mjs --out _site/data/offers.json --force \
+            || echo "Offers snapshot update failed; keeping last good offers.json if present."
+          rm -f _site/data/.offers.json.*.tmp
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

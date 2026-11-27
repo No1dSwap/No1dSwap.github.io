@@ -17,7 +17,7 @@ Rebased cleanly onto `No1dSwap/No1dSwap.github.io` commit `b2185ed`. Adds out-of
 - `index.html` & `README.md`: Minimal offer-only updates for same-origin `./data/offers.json` while preserving `connect-src 'self'`, `styles/noscript.css`, frame guard, live market copy, and all dated miner warnings.
 
 ### Untouched Files From `b2185ed`
-`scripts/update-market.mjs`, `test/update-market.test.js`, `js/market-data.js`, `js/market-ui.js` (already displays the static dated miner warning next to `Unconfirmed`), `data/market.json`, `styles/noscript.css`, `js/site.js`, `js/invite-codec.js`, `js/sample-offers.js`, and `.github/workflows/pages.yml` are all untouched.
+`scripts/update-market.mjs`, `test/update-market.test.js`, `js/market-data.js`, `js/market-ui.js` (already displays the static dated miner warning next to `Unconfirmed`), `data/market.json`, `styles/noscript.css`, `js/site.js`, `js/invite-codec.js`, and `js/sample-offers.js` are all untouched.
 
 ## Default Nostr Relays (Live Check `2026-11-26 UTC`)
 
@@ -91,28 +91,28 @@ Maximum file size: `1,048,576` bytes (1 MB). Unknown keys are ignored by the bro
 - **At least one relay succeeded (including 0 open offers):** writes a fresh validated `./data/offers.json` (`"sample": false`) atomically.
 - **Browser freshness thresholds:** `<= 30 min` fresh; `> 30 min` to `6 h` shown with `"stale"` badge; `> 6 h` fails closed (`offersVisible: false`, live offers hidden); `> 5 min` future `generated_at` fails closed.
 
-## Example GitHub Pages Workflow Step (Documentation Only)
+## GitHub Pages Workflow Step (`.github/workflows/pages.yml`)
 
-Note that `.github/workflows/pages.yml` is intentionally untouched in this patch series. Just as `pages.yml` builds `_site` from `index.html`, `assets/`, `js/`, and `styles/` — excluding the repository's sample `data/market.json` so sample data is never deployed to production — the repository's sample `data/offers.json` is likewise excluded by `pages.yml` until the site operator explicitly adds an offers step:
+Just as `.github/workflows/pages.yml` builds `_site` from `index.html`, `assets/`, `js/`, and `styles/` — excluding the repository's sample `data/market.json` and sample `data/offers.json` so sample data is never deployed — it refreshes `_site/data/offers.json` on the same 10-minute schedule right after the market step, with soft-fail handling so an offers failure never stops the market update or deploy:
 
 ```yaml
 - name: Fetch the live site's last good offers.json
+  timeout-minutes: 1
+  continue-on-error: true
   run: |
     mkdir -p _site/data
-    curl -fsS --max-time 10 --max-filesize 1048576 --proto '=https' \
-      "${{ steps.pages.outputs.base_url }}/data/offers.json" \
-      -o _site/data/offers.json || rm -f _site/data/offers.json
+    curl -fsS --max-time 10 --max-filesize 1048576 --proto '=https' "${{ steps.pages.outputs.base_url }}/data/offers.json" -o _site/data/offers.json || rm -f _site/data/offers.json
 
-- name: Update Nostr offers snapshot
+- name: Update offers snapshot
+  timeout-minutes: 2
+  continue-on-error: true
   run: |
-    node scripts/update-offers.mjs \
-      --out _site/data/offers.json \
-      --relays "wss://nos.lol,wss://relay.primal.net,wss://relay.snort.social" \
-      --min-pow 16 \
-      --force || true
+    timeout 90 node scripts/update-offers.mjs --out _site/data/offers.json --force \
+      || echo "Offers snapshot update failed; keeping last good offers.json if present."
+    rm -f _site/data/.offers.json.*.tmp
 ```
 
-If all relays fail, `update-offers.mjs` leaves the fetched last-good `_site/data/offers.json` untouched; if no previous file existed, the page falls back cleanly to showing the Sepolia-only built-in sample listings.
+If all relays fail (or the step times out), `update-offers.mjs` leaves the fetched last-good `_site/data/offers.json` untouched and any stray `.offers.json.*.tmp` file is removed before upload; if no previous file existed, the page falls back cleanly to showing the Sepolia-only built-in sample listings.
 
 ## Verification
 
