@@ -361,7 +361,7 @@ export async function mountMarketStrip(options = {}) {
     const topProducerFact = shareUnconfirmed
       ? "Unconfirmed"
       : snap && snap.ok && snap.parano1d
-        ? `${formatQuoteNumber(snap.parano1d.topProducerSharePct, 1)}% / ${snap.parano1d.windowBlocks} blk${shareStale ? " (stale)" : ""}`
+        ? `${formatQuoteNumber(snap.parano1d.topProducerSharePct, 1)}% / ${snap.parano1d.windowBlocks} blk${snap.parano1d.shareSingleSource ? " (1 source)" : ""}${shareStale ? " (stale)" : ""}`
         : `${PROTOCOL_CONSTANTS.minerConcentration.recentProducerPct} (${PROTOCOL_CONSTANTS.minerConcentration.recentProducerDateUtc})`;
 
     // --- NOID Card ---
@@ -564,7 +564,7 @@ export async function mountMarketStrip(options = {}) {
     const producerDetail = shareUnconfirmed
       ? `Unconfirmed — mainnet Bob cap ${PROTOCOL_CONSTANTS.minerConcentration.bobApprovalCeilingPct}% still applies`
       : snap && snap.ok && snap.parano1d
-        ? `${formatQuoteNumber(snap.parano1d.topProducerSharePct, 1)}% over ${snap.parano1d.windowBlocks} blocks · measured ${formatUtcShort(snap.parano1d.measuredAtUtc)}${shareStale ? " · stale" : ""} · Bob mainnet cap ${PROTOCOL_CONSTANTS.minerConcentration.bobApprovalCeilingPct}%`
+        ? `${formatQuoteNumber(snap.parano1d.topProducerSharePct, 1)}% over ${snap.parano1d.windowBlocks} blocks · measured ${formatUtcShort(snap.parano1d.measuredAtUtc)}${shareStale ? " · stale" : ""}${snap.parano1d.shareSingleSource ? " · one source (Noidium); the desktop app checks your own node before Bob locks" : ""} · Bob mainnet cap ${PROTOCOL_CONSTANTS.minerConcentration.bobApprovalCeilingPct}%`
         : `${PROTOCOL_CONSTANTS.minerConcentration.recentProducerPct} · measured ${PROTOCOL_CONSTANTS.minerConcentration.recentProducerDateUtc} UTC · Bob mainnet cap ${PROTOCOL_CONSTANTS.minerConcentration.bobApprovalCeilingPct}%`;
 
     factsBar.appendChild(

@@ -54,6 +54,15 @@ export const ENDPOINTS = Object.freeze({
 });
 
 export const MIN_WINDOW_BLOCKS_FOR_SHARE = 300;
+/** Window used when Noidium is the only reachable source (seconds). */
+export const SINGLE_SOURCE_WINDOW_S = 4 * 60 * 60;
+/**
+ * With one source only, a share below the last dated measurement (75 % on
+ * 2026-11-23) is not published: an understated share is the harmful error.
+ */
+export const SINGLE_SOURCE_MIN_SHARE_PCT = 75;
+/** Allowed values of parano1d.share_source. */
+export const SHARE_SOURCES = Object.freeze({ both: "noidexplorer+noidium", noidiumOnly: "noidium" });
 export const NOIDIUM_MAX_PAGES = 3;
 export const NOIDIUM_MAX_INVALID_RATIO = 0.05;
 const MINER_ADDRESS_RE = /^o1[02-9ac-hj-np-z]{20,100}$/;
@@ -617,6 +626,7 @@ export function parseNoidiumBlocksPage(payload) {
  */
 export async function fetchNoidiumWindow(baseUrl, window, fetchOpts) {
   const byHeight = new Map();
+  let newestTs = 0;
   let invalid = 0;
   let total = 0;
   let covered = false;
@@ -641,6 +651,7 @@ export async function fetchNoidiumWindow(baseUrl, window, fetchOpts) {
       if (b.ts < oldestTs) oldestTs = b.ts;
       if (b.canonical && b.ts >= window.from && b.ts <= window.to && !byHeight.has(b.height)) {
         byHeight.set(b.height, b.miner);
+        if (b.ts > newestTs) newestTs = b.ts;
       }
     }
     if (before !== null && lowestHeight >= before) {
@@ -672,6 +683,31 @@ export async function fetchNoidiumWindow(baseUrl, window, fetchOpts) {
     topAddress,
     topBlocks,
     topProducerSharePct: roundTo((topBlocks / windowBlocks) * 100, 2),
+    newestTs,
+  };
+}
+
+/**
+ * Noidium alone, used only when the explorer cannot be read at all. Publishes
+ * the share only for at least 300 canonical blocks in the last 4 hours, a
+ * newest block no older than 30 minutes, and a share at or above
+ * SINGLE_SOURCE_MIN_SHARE_PCT. Otherwise every field is null.
+ */
+export function singleSourceShare(noidiumResult, nowMs) {
+  const none = { topProducerSharePct: null, windowBlocks: null, measuredAt: null, agreed: false, source: null };
+  if (!noidiumResult || !Number.isInteger(noidiumResult.newestTs) || noidiumResult.newestTs <= 0) return none;
+  if (noidiumResult.windowBlocks < MIN_WINDOW_BLOCKS_FOR_SHARE) return none;
+  const newestMs = noidiumResult.newestTs * 1000;
+  if (newestMs > nowMs + 5 * 60 * 1000 || nowMs - newestMs > 30 * 60 * 1000) return none;
+  const pct = noidiumResult.topProducerSharePct;
+  if (typeof pct !== "number" || !Number.isFinite(pct) || pct <= 0 || pct > 100) return none;
+  if (pct < SINGLE_SOURCE_MIN_SHARE_PCT) return none;
+  return {
+    topProducerSharePct: pct,
+    windowBlocks: noidiumResult.windowBlocks,
+    measuredAt: new Date(newestMs).toISOString().replace(/\.\d{3}Z$/, "Z"),
+    agreed: false,
+    source: SHARE_SOURCES.noidiumOnly,
   };
 }
 
@@ -863,15 +899,39 @@ export async function runUpdate({
       noidiumError = err && err.message ? err.message : "error";
     }
   }
-  const producerResult = crossCheckProducerShare(explorerResult, noidiumWindow);
+  let producerResult = crossCheckProducerShare(explorerResult, noidiumWindow);
+  producerResult = {
+    ...producerResult,
+    source: producerResult.topProducerSharePct !== null ? SHARE_SOURCES.both : null,
+  };
+  // The explorer could not be read at all: fall back to Noidium alone over the last 4 hours.
+  // (When both answered but disagreed, the share stays null: no fallback.)
+  let singleSourceNote = null;
+  if (!explorerResult) {
+    try {
+      const nowS = Math.floor(now / 1000);
+      const solo = await fetchNoidiumWindow(
+        endpoints.noidiumBlocks,
+        { from: nowS - SINGLE_SOURCE_WINDOW_S, to: nowS },
+        fetchOpts,
+      );
+      producerResult = singleSourceShare(solo, now);
+      singleSourceNote =
+        producerResult.topProducerSharePct !== null
+          ? `noidium alone ${solo.topProducerSharePct}% of ${solo.windowBlocks}, published`
+          : `noidium alone ${solo.topProducerSharePct}% of ${solo.windowBlocks}, withheld`;
+    } catch (err) {
+      singleSourceNote = `noidium alone failed: ${err && err.message ? err.message : "error"}`;
+    }
+  }
   // One plain line for the job log: why the share is or is not published (counts only, no URLs).
   const diagText = (v) => String(v).replace(/[^\x20-\x7e]/g, "").slice(0, 120);
   let shareDiag;
   if (explorerRes.status !== "fulfilled") {
     const reason = explorerRes.reason && explorerRes.reason.message ? explorerRes.reason.message : "error";
-    shareDiag = `explorer failed: ${diagText(reason)}`;
+    shareDiag = diagText(`explorer failed: ${reason}; ${singleSourceNote}`);
   } else if (!explorerResult) {
-    shareDiag = "explorer response rejected by validation";
+    shareDiag = diagText(`explorer response rejected by validation; ${singleSourceNote}`);
   } else if (!noidiumWindow) {
     shareDiag = `noidium failed: ${diagText(noidiumError || "error")}`;
   } else {
@@ -909,6 +969,7 @@ export async function runUpdate({
       top_producer_share_pct: producerResult.topProducerSharePct,
       window_blocks: producerResult.windowBlocks,
       measured_at: producerResult.measuredAt,
+      share_source: producerResult.source,
     },
     eth_gas_gwei: ethGasGwei,
   };

@@ -12,6 +12,7 @@ import {
   ALLOWED_NOID_VENUES,
   DEFAULT_NOID_VENUE,
   ENDPOINTS,
+  SINGLE_SOURCE_MIN_SHARE_PCT,
   FETCH_TIMEOUT_MS,
   MAX_RESPONSE_BYTES,
   RATE_LIMIT_MS,
@@ -473,13 +474,48 @@ test("Producer share: a Noidium failure writes null and still writes the prices"
     assert.equal(res.payload.noid_usd, 0.64);
   }
 
-  // Explorer failure: share, window and time are all null.
-  const noExplorer = await runShare({
+  // Explorer and Noidium both down: share, window, time and source are all null.
+  const neither = await runShare({
     [ENDPOINTS.noidexplorer]: () => makeJsonResponse("down", { status: 500 }),
+    [ENDPOINTS.noidiumBlocks]: () => makeJsonResponse("down", { status: 503 }),
   });
-  assert.equal(noExplorer.payload.parano1d.top_producer_share_pct, null);
-  assert.equal(noExplorer.payload.parano1d.window_blocks, null);
-  assert.equal(noExplorer.payload.parano1d.measured_at, null);
+  assert.equal(neither.payload.parano1d.top_producer_share_pct, null);
+  assert.equal(neither.payload.parano1d.window_blocks, null);
+  assert.equal(neither.payload.parano1d.measured_at, null);
+  assert.equal(neither.payload.parano1d.share_source, null);
+});
+
+test("Producer share: explorer unreachable -> Noidium alone, labelled, only at or above the 75 % floor", async () => {
+  const explorerDown = { [ENDPOINTS.noidexplorer]: () => makeJsonResponse("forbidden", { status: 403 }) };
+
+  const solo = await runShare(explorerDown);
+  const pct = solo.payload.parano1d.top_producer_share_pct;
+  assert.equal(typeof pct, "number");
+  assert.ok(pct >= SINGLE_SOURCE_MIN_SHARE_PCT);
+  assert.ok(solo.payload.parano1d.window_blocks >= 300);
+  assert.equal(typeof solo.payload.parano1d.measured_at, "string");
+  assert.equal(solo.payload.parano1d.share_source, "noidium");
+  assert.equal(solo.snapshot.parano1d.shareSingleSource, true);
+
+  // Below the floor (an understated share is the harmful error): withheld.
+  const low = await runShare({
+    ...explorerDown,
+    [ENDPOINTS.noidiumBlocks]: noidiumBlocksHandler(noidiumChain({ top: 230, other: 237 })),
+  });
+  assert.equal(low.payload.parano1d.top_producer_share_pct, null);
+  assert.equal(low.payload.parano1d.share_source, null);
+
+  // Explorer answers and disagrees: no fallback to Noidium alone.
+  const disagree = await runShare({
+    [ENDPOINTS.noidiumBlocks]: noidiumBlocksHandler(noidiumChain({ top: 330, other: 137 })),
+  });
+  assert.equal(disagree.payload.parano1d.top_producer_share_pct, null);
+  assert.equal(disagree.payload.parano1d.share_source, null);
+
+  // Two sources agreeing are labelled as such.
+  const both = await runShare({});
+  assert.equal(both.payload.parano1d.share_source, "noidexplorer+noidium");
+  assert.equal(both.snapshot.parano1d.shareSingleSource, false);
 });
 
 test("Producer share: invalid Noidium entries are skipped up to 5 %, above that the source fails", async () => {

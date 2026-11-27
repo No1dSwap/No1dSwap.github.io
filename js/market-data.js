@@ -358,6 +358,17 @@ export function parseMarketSnapshot(raw, nowMs = Date.now()) {
   const shareExpired = Boolean(isExpired || (measuredAtAgeMs !== null && measuredAtAgeMs > EXPIRE_AFTER_MS));
   const shareStale = Boolean(isStale || (measuredAtAgeMs !== null && measuredAtAgeMs > STALE_AFTER_MS));
   const topProducerSharePct = !rawShareUnavailable && !shareExpired ? share : null;
+  // Optional share_source: "noidexplorer+noidium" (two sources agree) or "noidium" (one source).
+  // Missing means an older file written only from two sources; any other value fails closed.
+  const rawShareSource = obj.parano1d.share_source;
+  let shareSource = "noidexplorer+noidium";
+  if (rawShareSource !== undefined && rawShareSource !== null) {
+    if (rawShareSource !== "noidexplorer+noidium" && rawShareSource !== "noidium") {
+      return failSnapshot("Snapshot parano1d.share_source must be \"noidexplorer+noidium\", \"noidium\" or null.");
+    }
+    shareSource = rawShareSource;
+  }
+  const shareSingleSource = topProducerSharePct !== null && shareSource === "noidium";
   const shareUnavailable = topProducerSharePct === null;
 
   const freshness = isExpired ? "expired" : isStale ? "stale" : "fresh";
@@ -419,6 +430,7 @@ export function parseMarketSnapshot(raw, nowMs = Date.now()) {
       shareUnavailable,
       shareStale,
       shareExpired,
+      shareSingleSource,
       windowBlocks,
       measuredAtUtc: measured ? measured.iso : null,
       measuredAtMs: measured ? measured.ms : null,
