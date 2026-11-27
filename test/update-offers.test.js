@@ -484,7 +484,7 @@ test("validateOfferEvent refuses unpinned contracts, over-cap offers, invalid co
 
   // Valid mainnet (invite tag) and Sepolia (content carrier) accepted
   const goodMainnet = makeSignedOfferEvent({
-    code: makeInviteCode({ network: "mainnet", noidAmount: "2500", ethAmount: "0.5", seed: 1 }),
+    code: makeInviteCode({ network: "mainnet", noidAmount: "20000", ethAmount: "0.5", seed: 1 }),
     powBits: 8,
   });
   assert.equal(validateOfferEvent(goodMainnet, ctx).ok, true);
@@ -542,7 +542,7 @@ test("validateOfferEvent refuses unpinned contracts, over-cap offers, invalid co
       network: "mainnet",
       contract: NETWORK_SPECS.mainnet.pinnedContract,
       contract_version: 1,
-      noid_micronoid: "2501000000", // > 2500 NOID
+      noid_micronoid: "20001000000", // > 20000 NOID
       eth_wei: "100000000000000000",
       bob_noid: makeTestNoidAddr(4),
       bob_eth: makeTestEthAddr(4),

@@ -40,9 +40,9 @@ export const NETWORK_SPECS = Object.freeze({
     chainId: 1,
     pinnedContract: "0x4e364cC86EdBF307CC6F336F3a72e1a24d284D70",
     allowedContractVersions: Object.freeze([1]),
-    maxNoidMicro: 2_500_000_000n,
+    maxNoidMicro: 20_000_000_000n,
     maxEthWei: 1_000_000_000_000_000_000n,
-    maxNoid: "2500",
+    maxNoid: "20000",
     maxEth: "1",
   }),
   sepolia: Object.freeze({
@@ -721,7 +721,7 @@ export function decimalToInt(str, places) {
 }
 
 /**
- * Groups the integer portion of a decimal string with commas ("2500.5" -> "2,500.5").
+ * Groups the integer portion of a decimal string with commas ("20000.5" -> "20,000.5").
  * @param {string} decimalStr
  * @returns {string}
  */

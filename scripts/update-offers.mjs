@@ -13,7 +13,7 @@
  *   secp256k1, NIP-13 proof-of-work commitment, NIP-40 expiration, <= 5 min
  *   future clock skew, and `no1dinv1:` invitation decoding via `decodeInvite()`.
  * - Refuses any offer whose HTLC contract is not pinned, exceeds network caps
- *   (1 ETH / 2,500 NOID mainnet; 0.01 ETH / 20 NOID Sepolia), or uses a
+ *   (1 ETH / 20,000 NOID mainnet; 0.01 ETH / 20 NOID Sepolia), or uses a
  *   disallowed contract version.
  * - Tracks signed maker liveness heartbeats (kind 32872) and flags duplicate /
  *   copied `canonicalCode` payloads across pubkeys plus repeated Bob addresses.

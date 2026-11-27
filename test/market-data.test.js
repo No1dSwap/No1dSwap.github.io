@@ -550,7 +550,7 @@ test("computeSwapEstimate, format helpers, and shared snapshot pub/sub", () => {
   assert.equal(mid.withinSepoliaCaps, false);
   assert.equal(mid.withinMainnetCaps, true);
 
-  const over = computeSwapEstimate({ amount: "0.6", side: "eth", ethUsd: 3200, noidUsd: 0.64 });
+  const over = computeSwapEstimate({ amount: "1.1", side: "eth", ethUsd: 3200, noidUsd: 0.64 });
   assert.equal(over.ok, true);
   assert.equal(over.withinMainnetCaps, false);
 

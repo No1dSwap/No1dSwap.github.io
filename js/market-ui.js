@@ -271,7 +271,7 @@ export async function mountMarketStrip(options = {}) {
       calcPrimary.textContent = "—";
       calcSecondary.textContent = est.error;
       calcCapNote.textContent =
-        "Caps: 2,500 NOID / 1 ETH mainnet · 20 NOID / 0.01 ETH Sepolia";
+        "Caps: 20,000 NOID / 1 ETH mainnet · 20 NOID / 0.01 ETH Sepolia";
       return;
     }
 
@@ -469,7 +469,7 @@ export async function mountMarketStrip(options = {}) {
           makeFactCell("Address", "o1… (bech32m)"),
           makeFactCell("Block time", `~${PROTOCOL_CONSTANTS.parano1d.blockNomSeconds} s`),
           makeFactCell("Finality", `${PROTOCOL_CONSTANTS.parano1d.finalityBlocks} blocks`),
-          makeFactCell("Mainnet cap", "2,500 NOID"),
+          makeFactCell("Mainnet cap", "20,000 NOID"),
           makeFactCell("Top producer", topProducerFact),
           makeFactCell("HTLC", "1-instr Pruv"),
         ]),

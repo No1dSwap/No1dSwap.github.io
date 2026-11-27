@@ -113,7 +113,7 @@ test("Bech32m Parano1d o1... encode and decode checks", () => {
 test("encodeInvite -> decodeInvite round-trips mainnet and sepolia with exact decimals", () => {
   const main = encodeInvite({
     network: "mainnet",
-    noidAmount: "2500",
+    noidAmount: "20000",
     ethAmount: "1",
     bobNoid: SAMPLE_NOID,
     bobEth: SAMPLE_ETH,
@@ -136,9 +136,9 @@ test("encodeInvite -> decodeInvite round-trips mainnet and sepolia with exact de
   assert.equal(decodedMain.fields.network, "mainnet");
   assert.equal(decodedMain.fields.contract, NETWORK_SPECS.mainnet.pinnedContract);
   assert.equal(decodedMain.fields.contract_version, "1");
-  assert.equal(decodedMain.fields.noid_amount, "2500");
+  assert.equal(decodedMain.fields.noid_amount, "20000");
   assert.equal(decodedMain.fields.eth_amount, "1");
-  assert.equal(decodedMain.fields.noid_micronoid, "2500000000");
+  assert.equal(decodedMain.fields.noid_micronoid, "20000000000");
   assert.equal(decodedMain.fields.eth_wei, "1000000000000000000");
   assert.equal(decodedMain.fields.bob_noid, SAMPLE_NOID);
   assert.equal(decodedMain.fields.bob_eth, SAMPLE_ETH);
@@ -324,10 +324,10 @@ test("rejects checksum corruption, truncation, non-canonical base64url, BOM, and
 });
 
 test("enforces mainnet and sepolia caps, contract version rules, and address integrity", () => {
-  // Over mainnet NOID cap (2,500 NOID)
+  // Over mainnet NOID cap (20,000 NOID)
   const overMainNoid = encodeInvite({
     network: "mainnet",
-    noidAmount: "2500.000001",
+    noidAmount: "20000.000001",
     ethAmount: "0.1",
     bobNoid: SAMPLE_NOID,
     bobEth: SAMPLE_ETH,
@@ -371,7 +371,7 @@ test("enforces mainnet and sepolia caps, contract version rules, and address int
     network: "mainnet",
     contract: NETWORK_SPECS.mainnet.pinnedContract,
     contract_version: 1,
-    noid_micronoid: "2500000001",
+    noid_micronoid: "20000000001",
     eth_wei: "100000000000000000",
     bob_noid: SAMPLE_NOID,
     bob_eth: SAMPLE_ETH,
@@ -562,7 +562,7 @@ test("PROTOCOL_CONSTANTS and Sepolia-only DEMO_OFFERS satisfy all security & acc
     PROTOCOL_CONSTANTS.mainnet.codeHash,
     "0xf510d2a368c730339fa7cf5e023bcf2429d5732793f043e03025780bb7043ff3",
   );
-  assert.equal(PROTOCOL_CONSTANTS.mainnet.maxNoid, "2500");
+  assert.equal(PROTOCOL_CONSTANTS.mainnet.maxNoid, "20000");
   assert.equal(PROTOCOL_CONSTANTS.mainnet.maxEth, "1");
   assert.equal(PROTOCOL_CONSTANTS.sepolia.maxNoid, "20");
   assert.equal(PROTOCOL_CONSTANTS.sepolia.maxEth, "0.01");
