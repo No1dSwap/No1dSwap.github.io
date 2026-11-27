@@ -1,0 +1,4 @@
+/* Loaded only when scripting is disabled: the frame guard cannot run, so show the page. */
+html body {
+  visibility: visible !important;
+}

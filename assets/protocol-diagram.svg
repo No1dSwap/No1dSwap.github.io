@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 432" role="img" aria-labelledby="diag-title diag-desc">
+  <title id="diag-title">No1d Swap Trust Boundary and Two-Chain Architecture</title>
+  <desc id="diag-desc">Diagram contrasting the untrusted static web bulletin board (public offers and no1dinv1 codes, zero keys, zero signing) handing off via copied code or pre-fill-only no1d-invite URI across a trust boundary to the local desktop app (sealed OS keystore, native Rust ZK prover, multi-hour watcher), which settles atomically across the Parano1d HTLC (1-instruction Pruv, NOID locked first) and Ethereum HTLC (Poseidon2b hashlock, reveal on ETH).</desc>
+
+  <defs>
+    <marker id="arrow-due" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M1 1.5 L8.5 5 L1 8.5 Z" fill="#f0b44c"/>
+    </marker>
+    <marker id="arrow-noid" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M1 1.5 L8.5 5 L1 8.5 Z" fill="#9fe870"/>
+    </marker>
+    <marker id="arrow-eth" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M1 1.5 L8.5 5 L1 8.5 Z" fill="#93a8ff"/>
+    </marker>
+    <marker id="arrow-bi-down" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1.5 L8.5 5 L1 8.5 Z" fill="#e6edea"/>
+    </marker>
+    <marker id="arrow-bi-up" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M9 1.5 L1.5 5 L9 8.5 Z" fill="#e6edea"/>
+    </marker>
+  </defs>
+
+  <!-- Canvas -->
+  <rect x="0" y="0" width="1080" height="432" rx="12" fill="#050908"/>
+
+  <!-- Trust Boundary Vertical Rule -->
+  <line x1="339" y1="42" x2="339" y2="412" stroke="#31433e" stroke-width="1.5" stroke-dasharray="5 5"/>
+  <rect x="275" y="14" width="128" height="22" rx="4" fill="#0c1614" stroke="#31433e" stroke-width="1"/>
+  <text x="339" y="29" text-anchor="middle" fill="#93a39d" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="600" letter-spacing="0.8">TRUST BOUNDARY</text>
+
+  <!-- ZONE 1: Static Web Bulletin Board -->
+  <g>
+    <rect x="22" y="52" width="262" height="352" rx="10" fill="#0c1614" stroke="#62776f" stroke-width="1.5" stroke-dasharray="6 4"/>
+
+    <rect x="40" y="70" width="166" height="22" rx="4" fill="#132120" stroke="#31433e" stroke-width="1"/>
+    <text x="50" y="85" fill="#b8c5c0" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="600">UNTRUSTED · ZERO KEYS</text>
+
+    <text x="40" y="122" fill="#e6edea" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="17" font-weight="600">Static Web Bulletin Board</text>
+    <text x="40" y="143" fill="#93a39d" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12.5">Public offer discovery only</text>
+
+    <line x1="40" y1="160" x2="266" y2="160" stroke="#1c2927" stroke-width="1"/>
+
+    <circle cx="46" cy="184" r="3" fill="#93a39d"/>
+    <text x="58" y="188" fill="#e6edea" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12.5">Public offers &amp; no1dinv1: codes</text>
+
+    <circle cx="46" cy="214" r="3" fill="#93a39d"/>
+    <text x="58" y="218" fill="#e6edea" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12.5">ZERO keys · ZERO signing</text>
+
+    <circle cx="46" cy="244" r="3" fill="#93a39d"/>
+    <text x="58" y="248" fill="#b8c5c0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12.5">No wallet connect or accounts</text>
+
+    <circle cx="46" cy="274" r="3" fill="#93a39d"/>
+    <text x="58" y="278" fill="#b8c5c0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12.5">Can vanish mid-swap safely</text>
+
+    <!-- Bottom warning callout inside Zone 1 -->
+    <rect x="40" y="316" width="226" height="68" rx="6" fill="#1c1608" stroke="#6b5220" stroke-width="1"/>
+    <rect x="40" y="316" width="4" height="68" rx="2" fill="#f0b44c"/>
+    <text x="54" y="337" fill="#f0b44c" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="600">DATA ONLY · NEVER TRUSTED</text>
+    <text x="54" y="356" fill="#e6edea" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">Desktop app re-checks every</text>
+    <text x="54" y="372" fill="#e6edea" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">amount, address, and cap.</text>
+  </g>
+
+  <!-- HANDOFF ARROW: Zone 1 -> Zone 2 -->
+  <g>
+    <rect x="288" y="176" width="102" height="24" rx="4" fill="#1c1608" stroke="#6b5220" stroke-width="1"/>
+    <text x="339" y="192" text-anchor="middle" fill="#f0b44c" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="600">copy code</text>
+
+    <line x1="286" y1="216" x2="386" y2="216" stroke="#f0b44c" stroke-width="2.2" marker-end="url(#arrow-due)"/>
+
+    <rect x="286" y="232" width="106" height="24" rx="4" fill="#0c1614" stroke="#31433e" stroke-width="1"/>
+    <text x="339" y="248" text-anchor="middle" fill="#b8c5c0" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">no1d-invite://</text>
+    <text x="339" y="271" text-anchor="middle" fill="#93a39d" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="10">pre-fill only</text>
+  </g>
+
+  <!-- ZONE 2: Local Desktop App -->
+  <g>
+    <rect x="394" y="52" width="310" height="352" rx="10" fill="#0c1614" stroke="#1d5a4a" stroke-width="1.5"/>
+    <rect x="394" y="52" width="5" height="352" rx="2.5" fill="#3ee6b8"/>
+
+    <rect x="414" y="70" width="234" height="22" rx="4" fill="#08201a" stroke="#1d5a4a" stroke-width="1"/>
+    <text x="424" y="85" fill="#3ee6b8" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="600">LOCAL MACHINE · SIGNED RELEASE</text>
+
+    <text x="414" y="122" fill="#e6edea" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="17" font-weight="600">Local Desktop App</text>
+    <text x="414" y="143" fill="#93a39d" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12.5">Alice &amp; Bob run independently</text>
+
+    <!-- Module 1 -->
+    <rect x="414" y="160" width="272" height="50" rx="6" fill="#132120" stroke="#1c2927" stroke-width="1"/>
+    <text x="426" y="180" fill="#e6edea" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="13" font-weight="600">Sealed OS Keystore</text>
+    <text x="426" y="198" fill="#b8c5c0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="11.5">Throwaway per-swap keys + paper code</text>
+
+    <!-- Module 2 -->
+    <rect x="414" y="218" width="272" height="50" rx="6" fill="#132120" stroke="#1c2927" stroke-width="1"/>
+    <text x="426" y="238" fill="#e6edea" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="13" font-weight="600">Native Rust ZK Prover</text>
+    <text x="426" y="256" fill="#b8c5c0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="11.5">Local proofs · direct localhost node RPC</text>
+
+    <!-- Module 3 -->
+    <rect x="414" y="276" width="272" height="50" rx="6" fill="#132120" stroke="#1c2927" stroke-width="1"/>
+    <text x="426" y="296" fill="#e6edea" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="13" font-weight="600">Multi-Hour Watcher &amp; Autopilot</text>
+    <text x="426" y="314" fill="#b8c5c0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="11.5">Keep-awake · claims &amp; auto-refunds</text>
+
+    <!-- Module 4 -->
+    <rect x="414" y="334" width="272" height="50" rx="6" fill="#132120" stroke="#1c2927" stroke-width="1"/>
+    <text x="426" y="354" fill="#e6edea" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="13" font-weight="600">Fail-Closed Verification Gates</text>
+    <text x="426" y="372" fill="#b8c5c0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="11.5">4x4 check line · caps · miner share gate</text>
+  </g>
+
+  <!-- ARROWS: Zone 2 -> Zone 3 -->
+  <g>
+    <path d="M704 166 L734 166 L734 126 L758 126" fill="none" stroke="#9fe870" stroke-width="2" marker-end="url(#arrow-noid)"/>
+    <path d="M704 282 L734 282 L734 328 L758 328" fill="none" stroke="#93a8ff" stroke-width="2" marker-end="url(#arrow-eth)"/>
+  </g>
+
+  <!-- ZONE 3A: Parano1d HTLC -->
+  <g>
+    <rect x="766" y="52" width="292" height="142" rx="10" fill="#0c1614" stroke="#2f4d22" stroke-width="1.5"/>
+    <rect x="766" y="52" width="5" height="142" rx="2.5" fill="#9fe870"/>
+
+    <rect x="786" y="68" width="160" height="22" rx="4" fill="#101f0d" stroke="#2f4d22" stroke-width="1"/>
+    <text x="796" y="83" fill="#9fe870" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="600">PARANO1D · LOCKS FIRST</text>
+
+    <text x="786" y="116" fill="#e6edea" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="16" font-weight="600">Parano1d HTLC</text>
+    <text x="786" y="138" fill="#b8c5c0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12.5">1-instruction Pruv (htlc.pruv)</text>
+    <text x="786" y="157" fill="#b8c5c0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12.5">NOID locked first · signatureless ZK</text>
+    <text x="786" y="177" fill="#93a39d" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">Refund after D (~6h 45m)</text>
+  </g>
+
+  <!-- ATOMIC LINK: Parano1d <-> Ethereum -->
+  <g>
+    <line x1="794" y1="202" x2="794" y2="254" stroke="#e6edea" stroke-width="1.8" marker-start="url(#arrow-bi-up)" marker-end="url(#arrow-bi-down)"/>
+    <rect x="814" y="206" width="244" height="44" rx="6" fill="#132120" stroke="#31433e" stroke-width="1"/>
+    <rect x="826" y="222" width="10" height="10" rx="1.5" transform="rotate(45 831 227)" fill="#e6edea"/>
+    <text x="846" y="224" fill="#e6edea" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="600">Shared secret s (Poseidon2b)</text>
+    <text x="846" y="241" fill="#b8c5c0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="11.5">Reveal s on ETH -&gt; claim NOID</text>
+  </g>
+
+  <!-- ZONE 3B: Ethereum HTLC -->
+  <g>
+    <rect x="766" y="262" width="292" height="142" rx="10" fill="#0c1614" stroke="#2d3869" stroke-width="1.5"/>
+    <rect x="766" y="262" width="5" height="142" rx="2.5" fill="#93a8ff"/>
+
+    <rect x="786" y="278" width="166" height="22" rx="4" fill="#0f1529" stroke="#2d3869" stroke-width="1"/>
+    <text x="796" y="293" fill="#93a8ff" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="600">ETHEREUM · REVEAL HERE</text>
+
+    <text x="786" y="326" fill="#e6edea" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="16" font-weight="600">Ethereum HTLC</text>
+    <text x="786" y="348" fill="#b8c5c0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12.5">Poseidon2b contract (immutable, 0% fee)</text>
+    <text x="786" y="367" fill="#b8c5c0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12.5">Alice reveals s on ETH to claim ETH</text>
+    <text x="786" y="387" fill="#93a39d" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">Refund after T_reveal (~2h 20m)</text>
+  </g>
+</svg>

@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Public hosting must also set HTTP response headers:
+       Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; require-trusted-types-for 'script'
+       (connect-src 'self' is strictly for same-origin ./data/market.json — zero external hosts allowed.)
+       X-Content-Type-Options: nosniff
+       Referrer-Policy: no-referrer -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="description" content="No1d Swap: bridge-free NOID to ETH atomic swaps between two people. Static bulletin board and invite workbench; the desktop app holds all keys and runs every swap.">
+  <meta name="referrer" content="no-referrer">
+  <title>No1d Swap — Bridge-free NOID ↔ ETH atomic swaps</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/logo.svg">
+  <link rel="stylesheet" href="./styles/tokens.css">
+  <link rel="stylesheet" href="./styles/main.css">
+  <noscript><link rel="stylesheet" href="./styles/noscript.css"></noscript>
+  <script type="module" src="./js/site.js"></script>
+  <script type="module" src="./js/market-ui.js"></script>
+  <script type="module" src="./js/board-ui.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="No1d Swap home">
+        <img class="brand-mark" src="./assets/logo.svg" alt="" width="28" height="28">
+        <span class="brand-name">No1d <span class="brand-dia" aria-hidden="true"></span> Swap</span>
+      </a>
+
+      <button
+        type="button"
+        class="nav-toggle"
+        id="nav-toggle"
+        aria-expanded="false"
+        aria-controls="site-nav"
+      >Menu</button>
+
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <ul class="nav-list">
+          <li><a class="nav-link" href="#market">Assets</a></li>
+          <li><a class="nav-link" href="#how-it-works">How it works</a></li>
+          <li><a class="nav-link" href="#why-desktop">Why desktop</a></li>
+          <li><a class="nav-link" href="#bulletin-board">Bulletin board</a></li>
+          <li><a class="nav-link" href="#limits">Limits &amp; risks</a></li>
+          <li><a class="nav-link" href="#download">Download</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" tabindex="-1">
+    <!-- Hero -->
+    <section class="hero" id="top" aria-labelledby="hero-heading">
+      <div class="container hero-inner">
+        <div class="hero-pill">
+          <span class="hero-pill-dot" aria-hidden="true"></span>
+          <span>Zero keys on this site · No wallet connection · Pure static site</span>
+        </div>
+
+        <h1 class="hero-title" id="hero-heading">Bridge-free NOID ↔ ETH atomic swaps directly between two people.</h1>
+
+        <p class="hero-sub">
+          A contract on Parano1d and a contract on Ethereum hold the coins. Either both people get what they agreed on, or both get their own coins back after a deadline. No bridge, no wrapped token, no custodian, and no admin key. Built for two people who have a reason to trust each other, and for small amounts.
+        </p>
+
+        <div class="trust-callout" role="note" aria-label="Trust boundary">
+          <span class="trust-callout-label">Trust boundary</span>
+          <p>
+            The website is just a bulletin board—it never touches keys, never signs anything, and can disappear mid-swap without affecting your funds. The desktop app handles the swap.
+          </p>
+        </div>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-lg" href="#download">Download Desktop App</a>
+          <a class="btn btn-secondary btn-lg" href="#bulletin-board">Open Bulletin Board &amp; Invite Tool</a>
+        </div>
+
+        <ul class="hero-facts" aria-label="Protocol facts at a glance">
+          <li class="hero-fact">
+            <span class="hero-fact-val"><span class="c-noid">2,500 NOID</span> / <span class="c-eth">0.5 ETH</span></span>
+            <span class="hero-fact-label">Mainnet hard cap per swap</span>
+          </li>
+          <li class="hero-fact">
+            <span class="hero-fact-val">~50 min</span>
+            <span class="hero-fact-label">Typical settlement time</span>
+          </li>
+          <li class="hero-fact">
+            <span class="hero-fact-val">0% · immutable</span>
+            <span class="hero-fact-label">Contract fee &amp; admin keys</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Asset Reference Strip & Local Rate Calculator -->
+    <section class="section market-section" id="market" aria-labelledby="market-heading">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-eyebrow">Same-origin reference snapshot · Zero third-party APIs</span>
+          <h2 class="section-title" id="market-heading">Assets &amp; local rate calculator</h2>
+          <p class="section-lead">
+            Reference chain facts and an illustrative local calculator loaded only from <code>./data/market.json</code> on this host. Reference only — No1d Swap does not set a price; agree on terms with your counterparty.
+          </p>
+        </div>
+
+        <div id="market-strip-root">
+          <noscript>
+            <div class="callout">
+              <span class="callout-title">JavaScript is off</span>
+              <p class="callout-body">
+                The asset snapshot strip and local rate calculator run locally in your browser from <code>./data/market.json</code> with zero external requests.
+              </p>
+            </div>
+          </noscript>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why Desktop -->
+    <section class="section section-alt" id="why-desktop" aria-labelledby="why-desktop-heading">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-eyebrow">Architecture</span>
+          <h2 class="section-title" id="why-desktop-heading">Why a desktop program, not a web app</h2>
+          <p class="section-lead">
+            Atomic swaps need verified code, sealed secrets, and a watcher that stays awake for hours. A browser tab is the wrong place for all three.
+          </p>
+        </div>
+
+        <ol class="feature-grid">
+          <li class="feature-card">
+            <span class="feature-num">01</span>
+            <h3 class="feature-title">No silent code changes on refresh</h3>
+            <p class="feature-body">
+              A web app can serve different JavaScript on every page load. No1d Swap ships as offline releases signed by one Ed25519 release key; the app checks that signature before announcing an update and never installs silently.
+            </p>
+          </li>
+
+          <li class="feature-card">
+            <span class="feature-num">02</span>
+            <h3 class="feature-title">Keys stay sealed in your OS keystore</h3>
+            <p class="feature-body">
+              Swap secrets and fresh per-swap keys never enter a browser. They stay sealed in your operating system's key store, backed by atomic crash-safe swap files and a paper recovery code shown before any deposit.
+            </p>
+          </li>
+
+          <li class="feature-card">
+            <span class="feature-num">03</span>
+            <h3 class="feature-title">Reliable multi-hour timelock watching</h3>
+            <p class="feature-body">
+              Swaps span hours across two blockchains, and a suspended browser tab can miss a claim deadline. The desktop app watches both chains continuously and keeps your computer awake while coins sit in a contract.
+            </p>
+          </li>
+
+          <li class="feature-card">
+            <span class="feature-num">04</span>
+            <h3 class="feature-title">Direct localhost node access &amp; native Rust ZK proving</h3>
+            <p class="feature-body">
+              Parano1d spends require zero-knowledge proofs (<code>noid_gkr</code>) and direct reads against your local node (<code>127.0.0.1</code> or <code>[::1]</code>) plus a second-node cross-check—work a browser sandbox cannot do reliably.
+            </p>
+          </li>
+
+          <li class="feature-card">
+            <span class="feature-num">05</span>
+            <h3 class="feature-title">No central server to censor or take offline</h3>
+            <p class="feature-body">
+              The desktop program runs locally on a private <code>no1d://app</code> scheme with no listening network port. Even if this website vanishes mid-swap, your swap settles or refunds directly on Parano1d and Ethereum.
+            </p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- How a Swap Works -->
+    <section class="section" id="how-it-works" aria-labelledby="how-heading">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-eyebrow">Protocol</span>
+          <h2 class="section-title" id="how-heading">How a swap works</h2>
+          <p class="section-lead">
+            <strong>Alice</strong> sells <span class="c-noid">NOID</span> for ETH. <strong>Bob</strong> sells <span class="c-eth">ETH</span> for NOID. Each person runs the desktop program on their own computer. This site only passes public invitation text; every check, lock, reveal, and refund runs locally in the app.
+          </p>
+        </div>
+
+        <figure class="diagram-frame">
+          <img
+            class="diagram-img"
+            src="./assets/protocol-diagram.svg"
+            alt="Trust boundary diagram: static web bulletin board (public offers and no1dinv1 codes, zero keys) hands off via copied code or no1d-invite URI to the local desktop app (sealed OS keystore, native Rust ZK prover, multi-hour watcher), which settles across the Parano1d HTLC (1-instruction Pruv, NOID locked first) and Ethereum HTLC (Poseidon2b hashlock, reveal on Ethereum)."
+            width="1080"
+            height="432"
+          >
+          <figcaption class="diagram-caption">
+            Trust boundary: this website handles public <code>no1dinv1:</code> invitation codes only. Any <code>no1d-invite:</code> link pre-fills the desktop app's form—nothing is approved, deposited, or broadcast from the browser.
+          </figcaption>
+        </figure>
+
+        <div class="timeline" id="swap-timeline">
+          <div class="timeline-steps" role="tablist" aria-label="Six steps of a No1d Swap">
+            <button type="button" class="timeline-step is-active" role="tab" id="step-tab-0" aria-selected="true" aria-controls="timeline-detail" data-step="0" tabindex="0">
+              <span class="step-num">Step 1</span>
+              <span class="step-label">Save &amp; share invite</span>
+              <span class="step-actor">Bob</span>
+            </button>
+            <button type="button" class="timeline-step" role="tab" id="step-tab-1" aria-selected="false" aria-controls="timeline-detail" data-step="1" tabindex="-1">
+              <span class="step-num">Step 2</span>
+              <span class="step-label">Prepare swap</span>
+              <span class="step-actor">Alice</span>
+            </button>
+            <button type="button" class="timeline-step" role="tab" id="step-tab-2" aria-selected="false" aria-controls="timeline-detail" data-step="2" tabindex="-1">
+              <span class="step-num">Step 3</span>
+              <span class="step-label">Match 4×4 check line</span>
+              <span class="step-actor">Alice &amp; Bob</span>
+            </button>
+            <button type="button" class="timeline-step" role="tab" id="step-tab-3" aria-selected="false" aria-controls="timeline-detail" data-step="3" tabindex="-1">
+              <span class="step-num">Step 4</span>
+              <span class="step-label">One approval each</span>
+              <span class="step-actor">Alice &amp; Bob</span>
+            </button>
+            <button type="button" class="timeline-step" role="tab" id="step-tab-4" aria-selected="false" aria-controls="timeline-detail" data-step="4" tabindex="-1">
+              <span class="step-num">Step 5</span>
+              <span class="step-label">Both deposit in app</span>
+              <span class="step-actor">Alice &amp; Bob</span>
+            </button>
+            <button type="button" class="timeline-step" role="tab" id="step-tab-5" aria-selected="false" aria-controls="timeline-detail" data-step="5" tabindex="-1">
+              <span class="step-num">Step 6</span>
+              <span class="step-label">Autopilot settles</span>
+              <span class="step-actor">Both apps · ~50 min</span>
+            </button>
+          </div>
+
+          <div class="timeline-detail" id="timeline-detail" role="tabpanel" aria-labelledby="step-tab-0" tabindex="0">
+            <div class="timeline-detail-head">
+              <h3 class="timeline-detail-title" id="timeline-detail-title">1. Bob saves or copies an invitation</h3>
+              <span class="badge" id="timeline-detail-actor">Bob · Desktop app</span>
+            </div>
+            <p class="timeline-detail-body" id="timeline-detail-body">
+              Bob saves an invitation file or copies a one-line <code>no1dinv1:</code> code containing only public fields: network, amounts, pinned contract, and Bob's NOID and ETH addresses. No secret ever appears in an invitation. Alice opens or pastes it into her desktop app to pre-fill her form, and checks every value locally.
+            </p>
+            <div class="timeline-detail-meta" id="timeline-detail-meta">
+              <span class="chip chip-safe" id="timeline-detail-meta-1">Public fields only — zero secrets</span>
+              <span class="chip" id="timeline-detail-meta-2">Pre-fill only — never starts a swap</span>
+            </div>
+            <div class="timeline-controls">
+              <button type="button" class="btn btn-secondary btn-sm" id="timeline-prev" disabled>Previous step</button>
+              <span class="num dim" id="timeline-counter">1 / 6</span>
+              <button type="button" class="btn btn-secondary btn-sm" id="timeline-next">Next step</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="explainer-box" aria-labelledby="explainer-heading">
+          <div>
+            <span class="section-eyebrow">In plain words</span>
+            <h3 id="explainer-heading">Why Parano1d makes the hashlock free—and why NOID always locks first</h3>
+            <p class="muted">
+              Three terms first. A <strong>hashlock</strong> is a lock that opens for whoever shows a secret <code>s</code> whose hash <code>H</code> is written on the lock. A <strong>timelock</strong> is a deadline after which locked coins return automatically to whoever put them in. The <strong>reveal</strong> is the moment <code>s</code> becomes public on-chain: one person takes the other's coins by showing <code>s</code>, and the other reuses <code>s</code> to claim theirs.
+            </p>
+          </div>
+
+          <div class="explainer-grid">
+            <div class="explainer-item explainer-item-noid">
+              <h4>1. Free hashlock on Parano1d</h4>
+              <p>
+                Parano1d has no signatures. A wallet spends by giving a zero-knowledge proof that it knows a 256-bit secret <code>s</code> whose Poseidon2b hash is its address (<code>A = Addr(s)</code>). Setting a contract's claim authority to <code>Addr(s)</code> makes it a hashlock already—<code>htlc.pruv</code> compiles to <strong>1 of 16 instructions</strong> with no extra hash opcode.
+              </p>
+            </div>
+
+            <div class="explainer-item">
+              <h4>2. NOID must lock first</h4>
+              <p>
+                Because a Parano1d claim is a zero-knowledge proof, it never exposes <code>s</code> on-chain. That means Parano1d can never be the reveal leg. Alice (holding NOID) creates <code>s</code> and locks first with the longer deadline (~6 h 45 m); Bob (holding ETH) locks second with the shorter deadline (~2 h 20 m).
+              </p>
+            </div>
+
+            <div class="explainer-item explainer-item-eth">
+              <h4>3. Reveal happens on Ethereum</h4>
+              <p>
+                In the desktop app's <code>poseidon</code> lock, the Ethereum contract checks <code>Addr(s)</code> itself—no off-chain equivalence proof is needed. When Alice takes Bob's ETH, she reveals <code>s</code> on Ethereum; Bob's app reads <code>s</code> from that transaction and proves his NOID claim before the deadline.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Public Bulletin Board & Invite Code Workbench -->
+    <section class="section section-alt" id="bulletin-board" aria-labelledby="board-heading">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-eyebrow">Static preview · Read-only handoff</span>
+          <h2 class="section-title" id="board-heading">Public Bulletin Board &amp; Invite Code Workbench</h2>
+          <p class="section-lead">
+            Inspect or format public <code>no1dinv1:</code> invitation codes compatible with No1d Swap <span data-release-version>v0.2.0</span> (upcoming). Everything displayed here is informational only—never deposit to any address shown on a web page. The desktop program reads every term from the code and both chains itself.
+          </p>
+        </div>
+
+        <div class="board-stack">
+          <div class="callout callout-due" role="note" aria-label="Bulletin board trust boundary and miner limit">
+            <span class="callout-title">A listing is not a check. The program checks the terms; the miner limit still applies to the ETH side.</span>
+            <p class="callout-body">
+              Public, untrusted bulletin board preview. Offers listed here are unverified — the desktop app checks amounts, caps, the pinned contract, and address format locally (plus Parano1d mining share before Bob approves), not whether a counterparty is honest. One producer has recently mined about <strong>75%</strong> of Parano1d blocks (measured 2026-11-23 UTC); above half of the hashrate, a stranger acting as Alice can cheat Bob (the ETH side), and the desktop app refuses Bob's approval on mainnet above 65%.
+            </p>
+            <p class="callout-body">
+              <strong>Fake and copied offers:</strong> Anyone can post. A listing's age, note, and displayed size are untrusted text. Any <code>no1d-invite:</code> link is <strong>pre-fill only</strong> (identical to pasting the code—it never approves, deposits, starts a step, or skips the check-line match), and the OS URI handler lives in the desktop program. If public listings are later fed from Nostr relays (separate from the program's private test board), the board will display each poster's public key and flag duplicate <code>no1dinv1:</code> payloads so copies of someone else's offer can be told apart.
+            </p>
+          </div>
+
+          <div id="bulletin-board-root">
+            <noscript>
+              <div class="callout">
+                <span class="callout-title">JavaScript is off</span>
+                <p class="callout-body">
+                  The interactive bulletin board preview and <code>no1dinv1:</code> codec run locally in your browser with zero external requests. Enable local scripts to inspect or build invitation codes, or use the desktop app directly.
+                </p>
+              </div>
+            </noscript>
+          </div>
+
+          <div id="invite-tool-root"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Limits, Risks & Track Record -->
+    <section class="section" id="limits" aria-labelledby="limits-heading">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-eyebrow">Read before swapping</span>
+          <h2 class="section-title" id="limits-heading">Limits, risks &amp; track record</h2>
+          <p class="section-lead">
+            The desktop program shows these same limits before every swap. No1d Swap is young software that moves real value—use only amounts you can afford to lose.
+          </p>
+        </div>
+
+        <div class="limits-card">
+          <div class="limits-grid">
+            <div class="limits-group">
+              <h3>Three ways to lose coins</h3>
+              <ol class="risk-list">
+                <li class="risk-item">
+                  <strong>1. Offline after the reveal (ETH seller / Bob):</strong> After Alice claims the ETH and reveals <code>s</code>, Bob's program has at least about <strong>75 minutes</strong> on mainnet to claim the NOID (and get it final 18 blocks before the deadline). If Bob's computer is off or disconnected past that window, Alice can recover the NOID and Bob loses the ETH.
+                </li>
+                <li class="risk-item">
+                  <strong>2. Parano1d miner concentration (ETH seller / Bob):</strong> One producer has made about <strong>75%</strong> of recent Parano1d blocks (measured 2026-11-23 UTC; earlier 20-day range <strong>45% to 63%</strong>, <strong>52.7%</strong> on 2026-11-08 UTC). Above half of the hashrate, no longer timeout protects Bob if Alice is also the majority miner. <strong>Swap only with someone you have a reason to trust.</strong> Before Bob locks on mainnet, the swap tool refuses above <strong>35%</strong>, and Bob's explicit approval caps out at <strong>65%</strong>—never higher. That is a screen, not a defence against a miner split across addresses or a share that grows later.
+                </li>
+                <li class="risk-item">
+                  <strong>3. No independent outside audit yet:</strong> Every review so far was internal to the project. Neither the code nor the preimage resistance of Parano1d's <code>Addr</code> hash (Poseidon2b) for this use has been audited by outside experts. Keep amounts small.
+                </li>
+              </ol>
+            </div>
+
+            <div class="limits-group">
+              <h3>Hard caps &amp; exact timings</h3>
+              <div class="data-table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Network</th>
+                      <th scope="col">Max NOID</th>
+                      <th scope="col">Max ETH</th>
+                      <th scope="col">Refund deadlines</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <span class="badge badge-mainnet">Mainnet</span>
+                        <div class="dim">Chain 1 · v1 only</div>
+                      </td>
+                      <td class="num c-noid">2,500 NOID</td>
+                      <td class="num c-eth">0.5 ETH</td>
+                      <td class="num">ETH ~2 h 20 m<br>NOID ~6 h 45 m</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="badge badge-sepolia">Sepolia</span>
+                        <div class="dim">Chain 11155111</div>
+                      </td>
+                      <td class="num c-noid">20 NOID*</td>
+                      <td class="num c-eth">0.01 ETH</td>
+                      <td class="num">ETH ~1 h 30 m<br>NOID ~3 h 5 m</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="form-hint">
+                *Parano1d has no test network: the NOID is real money in every swap, including on Sepolia. Usual happy-path time is about <strong>50 minutes</strong> (most of it waiting for finality). Bob's post-reveal claim window is ≥ 75 min on mainnet (≥ 5 min on Sepolia).
+              </p>
+
+              <div class="contract-box" role="region" aria-label="Pinned Ethereum mainnet contract">
+                <div class="contract-row">
+                  <span class="chip chip-safe">Mainnet HTLC contract (immutable · 0% fee · Sourcify exact match)</span>
+                </div>
+                <code class="contract-val">0x4e364cC86EdBF307CC6F336F3a72e1a24d284D70</code>
+
+                <div class="contract-row">
+                  <span class="dim">Pinned bytecode hash (compiled into <code>swap-cli</code>)</span>
+                  <button
+                    type="button"
+                    class="btn btn-copy"
+                    data-copy-text="0xf510d2a368c730339fa7cf5e023bcf2429d5732793f043e03025780bb7043ff3"
+                    data-copy-label="Pinned code hash"
+                  >Copy hash</button>
+                </div>
+                <code class="contract-val">0xf510d2a368c730339fa7cf5e023bcf2429d5732793f043e03025780bb7043ff3</code>
+
+                <p class="form-hint">
+                  Deployed 2026-11-20 UTC (block 26,459,748) from a single-use key. Source: <code>eth/contracts/HTLCPoseidonV2.sol</code>. No owner, no admin key, no pause, no upgrade. Informational reference only—never send ETH directly to the contract address outside the desktop app.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="track-grid" role="region" aria-label="Live-run track record">
+          <article class="track-card">
+            <span class="badge badge-mainnet">Mainnet · Run 8</span>
+            <h3>1 settled, 0 refunded (terminal tools)</h3>
+            <p>
+              5 NOID ↔ 0.001 ETH on Ethereum mainnet (<code>poseidon</code> lock, <code>production</code> profile, 54 minutes). Both sides were run by the developer using the terminal tools before the desktop program existed. <strong>No swap between two separate people has run yet</strong>, and the desktop app itself has not yet settled on mainnet (run 23 stopped cleanly at Bob's producer screen at ~76% concentration, with nothing deposited).
+            </p>
+          </article>
+
+          <article class="track-card">
+            <span class="badge">Hostile campaign · L1–L6</span>
+            <h3>Runs 15–20 against misbehavior</h3>
+            <p>
+              Tested live on real nodes: Alice never funds (L1), Alice under-funds 4 instead of 5 NOID (L2), Bob locks with a too-short 28-minute reveal window (L3), a third party closes after reveal and still pays Bob (L4), and a second-node outage plus Parano1d epoch rotation before claim (L5–L6). Every case aborted or settled as designed.
+            </p>
+          </article>
+
+          <article class="track-card">
+            <span class="badge badge-sepolia">Desktop · Rehearsals 4.10–4.12</span>
+            <h3>Two-machine autopilot on Sepolia</h3>
+            <p>
+              Three full swaps between a Windows x64 installer (Alice) and a macOS Apple Silicon build (Bob) for 5 NOID ↔ 0.001 Sepolia ETH, with one approval each. All three settled end-to-end on autopilot; rehearsal 4.12 verified short-deposit flagging (13 s after block) and automatic lock after top-up (49 min total).
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download & Verify -->
+    <section class="section section-alt" id="download" aria-labelledby="download-heading">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-eyebrow">Desktop program · <span data-release-version>v0.2.0</span> (upcoming)</span>
+          <h2 class="section-title" id="download-heading">Download &amp; verify before you open</h2>
+          <p class="section-lead">
+            The release page and hosting account are not the proof; the offline Ed25519 signature on <code>release.json</code> is. If the signature or SHA-256 does not check out, do not install. Release <span data-release-version>v0.2.0</span> is upcoming—confirm exact installer filenames and verify commands against the published <code>release.json</code> once released.
+          </p>
+        </div>
+
+        <div class="download-panel" id="download-tabs">
+          <div class="tablist" role="tablist" aria-label="Operating system downloads">
+            <button
+              type="button"
+              class="tab-btn"
+              role="tab"
+              id="tab-macos"
+              aria-selected="true"
+              aria-controls="panel-macos"
+              data-os-tab="macos"
+              tabindex="0"
+            >macOS (Apple Silicon .dmg)</button>
+            <button
+              type="button"
+              class="tab-btn"
+              role="tab"
+              id="tab-windows"
+              aria-selected="false"
+              aria-controls="panel-windows"
+              data-os-tab="windows"
+              tabindex="-1"
+            >Windows (x64 .exe)</button>
+          </div>
+
+          <!-- macOS panel -->
+          <div class="download-body" role="tabpanel" id="panel-macos" aria-labelledby="tab-macos">
+            <div class="download-cta-row">
+              <div>
+                <h3>No1d Swap <span data-release-version>v0.2.0</span> (upcoming) for macOS (Apple Silicon)</h3>
+                <p class="muted">
+                  Expected disk image: <code data-installer-mac>No1d-Swap-0.2.0-mac-arm64.dmg</code> · Also download <code>release.json</code> and <code>release.json.sig</code> from the same release and confirm the exact filename inside <code>release.json</code> once published.
+                </p>
+              </div>
+              <a
+                class="btn btn-primary"
+                href="https://github.com/00Para/noid-swap/releases"
+                target="_blank"
+                rel="noopener noreferrer"
+              >Open GitHub Releases</a>
+            </div>
+
+            <div class="pubkey-box">
+              <div class="contract-row">
+                <span class="pubkey-label">Pinned Ed25519 release public key (desktop/lib/releasekey.js)</span>
+                <button
+                  type="button"
+                  class="btn btn-copy"
+                  data-copy-text="Thg9nhwwvqoKG4yOqiZM/PBeqT5LcrFFa7cKAHuqYxk="
+                  data-copy-label="Release public key"
+                >Copy key</button>
+              </div>
+              <code class="contract-val">Thg9nhwwvqoKG4yOqiZM/PBeqT5LcrFFa7cKAHuqYxk=</code>
+              <p class="form-hint">
+                Compare this line against <code>desktop/lib/releasekey.js</code> in the repository and any other channel where the project publishes it.
+              </p>
+            </div>
+
+            <ol class="verify-steps">
+              <li class="verify-step">
+                <span class="verify-step-title">Step 1 — Verify the Ed25519 signature on release.json (must print OK)</span>
+                <div class="code-block">
+                  <div class="code-block-head">
+                    <span>macOS Terminal · Node.js</span>
+                    <button
+                      type="button"
+                      class="btn btn-copy"
+                      data-copy-cmd="notice"
+                      data-copy-text="node desktop/scripts/release-key.js verify --pub Thg9nhwwvqoKG4yOqiZM/PBeqT5LcrFFa7cKAHuqYxk= --in release.json --sig release.json.sig"
+                      data-copy-label="Ed25519 verify command"
+                    >Copy</button>
+                  </div>
+                  <pre><code data-cmd-text="notice">node desktop/scripts/release-key.js verify --pub Thg9nhwwvqoKG4yOqiZM/PBeqT5LcrFFa7cKAHuqYxk= --in release.json --sig release.json.sig</code></pre>
+                </div>
+              </li>
+
+              <li class="verify-step">
+                <span class="verify-step-title">Step 2 — Check the disk image SHA-256 against the verified release.json</span>
+                <div class="code-block">
+                  <div class="code-block-head">
+                    <span>macOS Terminal · shasum</span>
+                    <button
+                      type="button"
+                      class="btn btn-copy"
+                      data-copy-cmd="macSha256"
+                      data-copy-text="shasum -a 256 No1d-Swap-0.2.0-mac-arm64.dmg"
+                      data-copy-label="macOS SHA-256 command"
+                    >Copy</button>
+                  </div>
+                  <pre><code data-cmd-text="macSha256">shasum -a 256 No1d-Swap-0.2.0-mac-arm64.dmg</code></pre>
+                </div>
+              </li>
+
+              <li class="verify-step">
+                <span class="verify-step-title">Step 3 (optional) — Second check via GitHub build provenance</span>
+                <div class="code-block">
+                  <div class="code-block-head">
+                    <span>macOS Terminal · GitHub CLI</span>
+                    <button
+                      type="button"
+                      class="btn btn-copy"
+                      data-copy-cmd="macAttestation"
+                      data-copy-text="gh attestation verify No1d-Swap-0.2.0-mac-arm64.dmg --repo 00Para/noid-swap"
+                      data-copy-label="macOS attestation command"
+                    >Copy</button>
+                  </div>
+                  <pre><code data-cmd-text="macAttestation">gh attestation verify No1d-Swap-0.2.0-mac-arm64.dmg --repo 00Para/noid-swap</code></pre>
+                </div>
+              </li>
+            </ol>
+
+            <div class="callout callout-due" role="note">
+              <span class="callout-title">Unsigned macOS installer note</span>
+              <p class="callout-body">
+                The disk image is not notarized or code-signed for Apple because this project has no legal name to put on a certificate. macOS will refuse to open it at first: open <strong>System Settings → Privacy &amp; Security</strong> and choose <strong>Open Anyway</strong>—only after Steps 1 and 2 pass. On first launch, write down the <strong>paper recovery code</strong> before depositing anything.
+              </p>
+            </div>
+          </div>
+
+          <!-- Windows panel -->
+          <div class="download-body" role="tabpanel" id="panel-windows" aria-labelledby="tab-windows" hidden>
+            <div class="download-cta-row">
+              <div>
+                <h3>No1d Swap <span data-release-version>v0.2.0</span> (upcoming) for Windows (x64)</h3>
+                <p class="muted">
+                  Expected installer: <code data-installer-win>No1d-Swap-0.2.0-win-x64.exe</code> · Also download <code>release.json</code> and <code>release.json.sig</code> from the same release and confirm the exact filename inside <code>release.json</code> once published.
+                </p>
+              </div>
+              <a
+                class="btn btn-primary"
+                href="https://github.com/00Para/noid-swap/releases"
+                target="_blank"
+                rel="noopener noreferrer"
+              >Open GitHub Releases</a>
+            </div>
+
+            <div class="pubkey-box">
+              <div class="contract-row">
+                <span class="pubkey-label">Pinned Ed25519 release public key (desktop/lib/releasekey.js)</span>
+                <button
+                  type="button"
+                  class="btn btn-copy"
+                  data-copy-text="Thg9nhwwvqoKG4yOqiZM/PBeqT5LcrFFa7cKAHuqYxk="
+                  data-copy-label="Release public key"
+                >Copy key</button>
+              </div>
+              <code class="contract-val">Thg9nhwwvqoKG4yOqiZM/PBeqT5LcrFFa7cKAHuqYxk=</code>
+              <p class="form-hint">
+                Compare this line against <code>desktop/lib/releasekey.js</code> in the repository and any other channel where the project publishes it.
+              </p>
+            </div>
+
+            <ol class="verify-steps">
+              <li class="verify-step">
+                <span class="verify-step-title">Step 1 — Verify the Ed25519 signature on release.json (must print OK)</span>
+                <div class="code-block">
+                  <div class="code-block-head">
+                    <span>PowerShell · Node.js</span>
+                    <button
+                      type="button"
+                      class="btn btn-copy"
+                      data-copy-cmd="notice"
+                      data-copy-text="node desktop/scripts/release-key.js verify --pub Thg9nhwwvqoKG4yOqiZM/PBeqT5LcrFFa7cKAHuqYxk= --in release.json --sig release.json.sig"
+                      data-copy-label="Ed25519 verify command"
+                    >Copy</button>
+                  </div>
+                  <pre><code data-cmd-text="notice">node desktop/scripts/release-key.js verify --pub Thg9nhwwvqoKG4yOqiZM/PBeqT5LcrFFa7cKAHuqYxk= --in release.json --sig release.json.sig</code></pre>
+                </div>
+              </li>
+
+              <li class="verify-step">
+                <span class="verify-step-title">Step 2 — Check the installer SHA-256 against the verified release.json</span>
+                <div class="code-block">
+                  <div class="code-block-head">
+                    <span>PowerShell · Get-FileHash</span>
+                    <button
+                      type="button"
+                      class="btn btn-copy"
+                      data-copy-cmd="winSha256"
+                      data-copy-text="Get-FileHash No1d-Swap-0.2.0-win-x64.exe"
+                      data-copy-label="Windows SHA-256 command"
+                    >Copy</button>
+                  </div>
+                  <pre><code data-cmd-text="winSha256">Get-FileHash No1d-Swap-0.2.0-win-x64.exe</code></pre>
+                </div>
+              </li>
+
+              <li class="verify-step">
+                <span class="verify-step-title">Step 3 (optional) — Second check via GitHub build provenance</span>
+                <div class="code-block">
+                  <div class="code-block-head">
+                    <span>PowerShell · GitHub CLI</span>
+                    <button
+                      type="button"
+                      class="btn btn-copy"
+                      data-copy-cmd="winAttestation"
+                      data-copy-text="gh attestation verify No1d-Swap-0.2.0-win-x64.exe --repo 00Para/noid-swap"
+                      data-copy-label="Windows attestation command"
+                    >Copy</button>
+                  </div>
+                  <pre><code data-cmd-text="winAttestation">gh attestation verify No1d-Swap-0.2.0-win-x64.exe --repo 00Para/noid-swap</code></pre>
+                </div>
+              </li>
+            </ol>
+
+            <div class="callout callout-due" role="note">
+              <span class="callout-title">Unsigned Windows installer note</span>
+              <p class="callout-body">
+                The installer is not code-signed for Windows because this project has no legal name to put on a certificate. SmartScreen will show <strong>"Windows protected your PC"</strong>: choose <strong>More info</strong>, then <strong>Run anyway</strong>—only after Steps 1 and 2 pass. On first launch, write down the <strong>paper recovery code</strong> before depositing anything.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-meta">
+        <strong>00Para/noid-swap · MIT License</strong>
+        <p>
+          Pure static site (local HTML, CSS, and JavaScript). Zero cookies, zero trackers, zero third-party requests, zero wallet connections, and zero private keys.
+        </p>
+        <p>
+          For Linux or self-builds, compile from source using the instructions in the repository.
+        </p>
+      </div>
+
+      <nav class="footer-links" aria-label="Repository links">
+        <a href="https://github.com/00Para/noid-swap/releases" target="_blank" rel="noopener noreferrer">GitHub Releases</a>
+        <a href="https://github.com/00Para/noid-swap/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">SECURITY.md</a>
+        <a href="https://github.com/00Para/noid-swap" target="_blank" rel="noopener noreferrer">Source Repository</a>
+      </nav>
+    </div>
+  </footer>
+
+  <div class="toast-region" id="toast-region" role="status" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>

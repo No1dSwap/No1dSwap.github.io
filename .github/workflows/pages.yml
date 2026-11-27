@@ -1,0 +1,65 @@
+# Builds the static site and publishes it to GitHub Pages (no data commits).
+# The market snapshot is refreshed on every run and lives only in the deployed
+# artifact. Note: GitHub disables a scheduled workflow after 60 days without
+# repository activity; re-enable it (or push a commit) when that happens.
+name: pages
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+
+      - name: Build site folder
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp -R assets js styles _site/
+          touch _site/.nojekyll
+
+      - name: Fetch the live site's last good market.json
+        run: |
+          mkdir -p _site/data
+          curl -fsS --max-time 10 --max-filesize 1048576 --proto '=https' "${{ steps.pages.outputs.base_url }}/data/market.json" -o _site/data/market.json || rm -f _site/data/market.json
+
+      - name: Update market snapshot
+        run: node scripts/update-market.mjs --out _site/data/market.json --soft-fail --no-rate-limit
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

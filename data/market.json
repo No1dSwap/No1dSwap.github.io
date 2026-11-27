@@ -1,0 +1,21 @@
+{
+  "v": 1,
+  "sample": true,
+  "generated_at": "2026-11-26T13:30:00Z",
+  "sources": {
+    "eth_usd": "Sample data",
+    "noid_usd": "Sample data"
+  },
+  "eth_usd": 3200,
+  "noid_usd": 0.64,
+  "noid_usd_venue": "Sample venue (not live)",
+  "noid_volume_24h_usd": 12500,
+  "noid_price_ts": "2026-11-26T13:30:00Z",
+  "noid_price_stale": false,
+  "parano1d": {
+    "top_producer_share_pct": 75.0,
+    "window_blocks": 144,
+    "measured_at": "2026-11-26T13:30:00Z"
+  },
+  "eth_gas_gwei": 0.8
+}
