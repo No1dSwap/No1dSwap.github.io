@@ -1232,7 +1232,7 @@ export function mountBoardWidgets(options = {}) {
         const openDesktopBtn = el("button", {
           type: "button",
           className: "btn btn-amber btn-sm",
-          text: "Open in Desktop (no1d-invite:)",
+          text: "Open in Desktop",
         });
         openDesktopBtn.addEventListener("click", () => {
           modal.openHandoff(canonicalCode, openDesktopBtn);
@@ -1842,31 +1842,18 @@ export function mountBoardWidgets(options = {}) {
 
         const actionBtns = [copyCodeBtn];
 
+        // The 0.2.0 desktop program takes the bare no1dinv1: code only (no link handler): no link is copied here.
         if (uriBuilt.ok && isSafeInviteUri(uriBuilt.uri)) {
-          const copyUriBtn = el("button", {
-            type: "button",
-            className: "btn btn-ghost btn-sm btn-copy",
-            text: "Copy no1d-invite: Link",
-          });
-          copyUriBtn.addEventListener("click", () => {
-            handleCopyAction(
-              uriBuilt.uri,
-              copyUriBtn,
-              "Copy no1d-invite: Link",
-              "Copied pre-fill no1d-invite: link.",
-            );
-          });
-
           const openViaBtn = el("button", {
             type: "button",
             className: "btn btn-amber btn-sm",
-            text: "Open via no1d-invite:",
+            text: "Open in Desktop",
           });
           openViaBtn.addEventListener("click", () => {
             modal.openHandoff(canonicalCode, openViaBtn);
           });
 
-          actionBtns.push(copyUriBtn, openViaBtn);
+          actionBtns.push(openViaBtn);
         }
 
         wrapper.appendChild(
@@ -2181,8 +2168,6 @@ export function mountBoardWidgets(options = {}) {
           ]),
         );
       } else {
-        const uriPre = el("pre", { className: "code-output", text: safeUri });
-
         const copyCodeBtn = el("button", {
           type: "button",
           className: "btn btn-secondary btn-sm btn-copy",
@@ -2197,23 +2182,8 @@ export function mountBoardWidgets(options = {}) {
           );
         });
 
-        const copyUriBtn = el("button", {
-          type: "button",
-          className: "btn btn-ghost btn-sm btn-copy",
-          text: "Copy no1d-invite: URI",
-        });
-        copyUriBtn.addEventListener("click", () => {
-          handleCopyAction(
-            safeUri,
-            copyUriBtn,
-            "Copy no1d-invite: URI",
-            "Copied pre-fill no1d-invite: URI.",
-          );
-        });
-
         const actions = el("div", { className: "form-actions" }, [
           copyCodeBtn,
-          copyUriBtn,
           addBoardBtn,
           inspectGeneratedBtn,
         ]);
@@ -2225,13 +2195,6 @@ export function mountBoardWidgets(options = {}) {
           }),
         );
         generatedOutput.appendChild(codePre);
-        generatedOutput.appendChild(
-          el("span", {
-            className: "form-label",
-            text: "Pre-fill desktop URI (no1d-invite: — pre-fill only, never approves or deposits)",
-          }),
-        );
-        generatedOutput.appendChild(uriPre);
         generatedOutput.appendChild(
           el("span", {
             className: "form-hint",

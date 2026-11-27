@@ -189,12 +189,12 @@
           <img
             class="diagram-img"
             src="./assets/protocol-diagram.svg"
-            alt="Trust boundary diagram: static web bulletin board (public offers and no1dinv1 codes, zero keys) hands off via copied code or no1d-invite URI to the local desktop app (sealed OS keystore, native Rust ZK prover, multi-hour watcher), which settles across the Parano1d HTLC (1-instruction Pruv, NOID locked first) and Ethereum HTLC (Poseidon2b hashlock, reveal on Ethereum)."
+            alt="Trust boundary diagram: static web bulletin board (public offers and no1dinv1 codes, zero keys) hands off via a copied no1dinv1 code to the local desktop app (sealed OS keystore, native Rust ZK prover, multi-hour watcher), which settles across the Parano1d HTLC (1-instruction Pruv, NOID locked first) and Ethereum HTLC (Poseidon2b hashlock, reveal on Ethereum)."
             width="1080"
             height="432"
           >
           <figcaption class="diagram-caption">
-            Trust boundary: this website handles public <code>no1dinv1:</code> invitation codes only. Any <code>no1d-invite:</code> link pre-fills the desktop app's form—nothing is approved, deposited, or broadcast from the browser.
+            Trust boundary: this website handles public <code>no1dinv1:</code> invitation codes only. A code pasted into the desktop app's New Swap form only fills it in—nothing is approved, deposited, or broadcast from the browser.
           </figcaption>
         </figure>
 
@@ -305,7 +305,7 @@
               Public, untrusted bulletin board. Offers listed here are unverified — the desktop app checks amounts, caps, the pinned contract, and address format locally (plus Parano1d mining share before Bob approves), not whether a counterparty is honest. One producer has recently mined about <strong>75%</strong> of Parano1d blocks (measured 2026-11-23 UTC); above half of the hashrate, a stranger acting as Alice can cheat Bob (the ETH side), and the desktop app refuses Bob's approval on mainnet above 65%.
             </p>
             <p class="callout-body">
-              <strong>Fake and copied offers:</strong> Anyone can post. A listing's age, note, and displayed size are untrusted text. Any <code>no1d-invite:</code> link is <strong>pre-fill only</strong> (identical to pasting the code—it never approves, deposits, starts a step, or skips the check-line match), and this release of the desktop program has no link handler, so the code is copied and pasted into the form. Live public offers are collected out-of-band by a host job from Nostr relays (separate from the desktop program's private test board) into same-origin <code>./data/offers.json</code>, re-validated in your browser, and shown with each poster's public key, NIP-13 PoW bits, liveness status, and explicit warnings for copied/duplicate <code>no1dinv1:</code> payloads or repeated Bob addresses.
+              <strong>Fake and copied offers:</strong> Anyone can post. A listing's age, note, and displayed size are untrusted text. A pasted code is <strong>pre-fill only</strong> (it never approves, deposits, starts a step, or skips the check-line match); this release of the desktop program has no link handler, so the code is copied and pasted into the form. Live public offers are collected out-of-band by a host job from Nostr relays (separate from the desktop program's private test board) into same-origin <code>./data/offers.json</code>, re-validated in your browser, and shown with each poster's public key, NIP-13 PoW bits, liveness status, and explicit warnings for copied/duplicate <code>no1dinv1:</code> payloads or repeated Bob addresses.
             </p>
           </div>
 
