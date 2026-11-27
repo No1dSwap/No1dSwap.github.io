@@ -73,10 +73,10 @@ const SWAP_STEPS = Object.freeze([
   Object.freeze({
     title: "4. One explicit approval each",
     actor: "Alice & Bob · Desktop app",
-    body: "Each side approves once, confirming exactly what they give and what they get. Bob's approval also records the live Parano1d mining share (the swap tool refuses above 35%, and Bob's approval refuses above 65% on mainnet) and states that he swaps only with someone he has a reason to trust.",
+    body: "Each side approves once, confirming exactly what they give and what they get. Bob's approval also records the live Parano1d mining share (the program warns above 35% and loudly above 50%, says "unknown" when it cannot read it, and does not refuse) and states that he swaps only with someone he has a reason to trust.",
     meta: [
       { text: "Mainnet cap: 20,000 NOID / 1 ETH", tone: "safe" },
-      { text: "Bob's miner screen: 35% default / 65% hard ceiling", tone: "due" },
+      { text: "Bob's miner warning: above 35%, loud above 50%, never a refusal", tone: "due" },
     ],
   }),
   Object.freeze({

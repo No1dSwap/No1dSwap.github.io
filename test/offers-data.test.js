@@ -625,7 +625,8 @@ test("DOM-free security audit: zero HTML-string sinks in JS, resolveOfferForDisp
     assert.match(marketText, /Unconfirmed/);
     assert.match(marketText, /about 75 ?%/);
     assert.match(marketText, /2026-11-23/);
-    assert.match(marketText, /65%/);
+    assert.match(marketText, /only warns about the mining share/);
+    assert.doesNotMatch(marketText, /65%/);
 
     // Check board-ui.js renders live Nostr offers with pubkey, PoW, liveness, copied offer warning, and repeated Bob warning
     const sharedCode = makeValidInviteCode({ network: "mainnet", noidAmount: "500", ethAmount: "0.1", seed: 20 });

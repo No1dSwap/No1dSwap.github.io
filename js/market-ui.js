@@ -562,10 +562,10 @@ export async function mountMarketStrip(options = {}) {
     // Small Facts Bar (prominent miner warning, gas, usual swap time, worst-case deadlines)
     clearNode(factsBar);
     const producerDetail = shareUnconfirmed
-      ? `Unconfirmed — mainnet Bob cap ${PROTOCOL_CONSTANTS.minerConcentration.bobApprovalCeilingPct}% still applies`
+      ? `Unconfirmed — the program only warns about the mining share`
       : snap && snap.ok && snap.parano1d
-        ? `${formatQuoteNumber(snap.parano1d.topProducerSharePct, 1)}% over ${snap.parano1d.windowBlocks} blocks · measured ${formatUtcShort(snap.parano1d.measuredAtUtc)}${shareStale ? " · stale" : ""}${snap.parano1d.shareSingleSource ? " · one source (Noidium); the desktop app checks your own node before Bob locks" : ""} · Bob mainnet cap ${PROTOCOL_CONSTANTS.minerConcentration.bobApprovalCeilingPct}%`
-        : `${PROTOCOL_CONSTANTS.minerConcentration.recentProducerPct} · measured ${PROTOCOL_CONSTANTS.minerConcentration.recentProducerDateUtc} UTC · Bob mainnet cap ${PROTOCOL_CONSTANTS.minerConcentration.bobApprovalCeilingPct}%`;
+        ? `${formatQuoteNumber(snap.parano1d.topProducerSharePct, 1)}% over ${snap.parano1d.windowBlocks} blocks · measured ${formatUtcShort(snap.parano1d.measuredAtUtc)}${shareStale ? " · stale" : ""}${snap.parano1d.shareSingleSource ? " · one source (Noidium); the desktop app checks your own node before Bob locks" : ""} · the program warns Bob above 35%, loudly above 50%`
+        : `${PROTOCOL_CONSTANTS.minerConcentration.recentProducerPct} · measured ${PROTOCOL_CONSTANTS.minerConcentration.recentProducerDateUtc} UTC · the program warns Bob above 35%, loudly above 50%`;
 
     factsBar.appendChild(
       el("div", { className: `market-fact market-fact-warn${shareStale ? " is-stale" : ""}` }, [

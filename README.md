@@ -19,7 +19,7 @@ A standalone, zero-dependency static website for **No1d Swap** (`00Para/noid-swa
 
 > A listing is not a check. The program checks the terms; the miner limit still applies to the ETH side.
 
-- **Parano1d miner concentration:** one producer has made about **75 %** of recent Parano1d blocks (measured `2026-11-23 UTC`; 45 %–63 % per day over the earlier 20-day measurement window; 52.7 % on `2026-11-08 UTC`). Above half of the hashrate, a stranger acting as Alice can cheat Bob (the ETH seller). Before Bob locks on Ethereum mainnet, the swap tool refuses above **35 %**, and Bob's explicit approval refuses above **65 %**. Swap only with someone you have a reason to trust.
+- **Parano1d miner concentration:** one producer has made about **75 %** of recent Parano1d blocks (measured `2026-11-23 UTC`; 45 %–63 % per day over the earlier 20-day measurement window; 52.7 % on `2026-11-08 UTC`). Above half of the hashrate, a stranger acting as Alice can cheat Bob (the ETH seller). Since 0.2.0 the program warns Bob before he locks on Ethereum mainnet (above **35 %**, loudly above **50 %**, "unknown" when it cannot read the share) and does not refuse; above half of the blocks, a miner who is Alice can take Bob's ETH. Swap only with someone you have a reason to trust.
 - **Fake and copied offers:** anyone can post a listing; a listing's age, note, and displayed size are untrusted text. Notes are stripped of Unicode bidirectional/control/zero-width characters and length-capped before display. Duplicate detection checks both the canonical `no1dinv1:` payload and Bob's decoded addresses. Any preview added through the Sepolia test builder is kept strictly in browser memory as **Local preview only** and vanishes on reload. If public listings are later fed from Nostr relays (separate from the desktop program's private test board), the board will display each poster's public key and flag duplicate `no1dinv1:` payloads so copies of someone else's offer can be told apart.
 
 ## Preview locally
@@ -102,7 +102,7 @@ To keep visitors' browsers from ever contacting third-party price APIs, the **As
 - **Nullable fields & cross-check failure:**
   - `noid_usd: null`: no NOID USD price is rendered or invented, and implied NOID/ETH rates and offer-vs-reference diffs are omitted.
   - `eth_usd: null` (e.g. if CoinGecko and Kraken disagree by `> 2%`): ETH card shows `"ETH price unavailable"` and implied rates / offer diffs are omitted.
-  - `parano1d.top_producer_share_pct: null` (e.g. one of the two indexers failed or disagreed, or `measured_at` is missing or expired): strip displays a neutral `"Unconfirmed"` warning while keeping the 65% mainnet Bob cap reminder.
+  - `parano1d.top_producer_share_pct: null` (e.g. one of the two indexers failed or disagreed, or `measured_at` is missing or expired): strip displays a neutral `"Unconfirmed"` warning while keeping the reminder that the program only warns about the mining share.
 - **Strict failure:** if the fetch fails, exceeds 1 MB, is invalid JSON, or fails any required field check, the strip fails closed to `"Prices unavailable"` and never falls back to another host.
 
 ## Same-origin live Nostr offers (`./data/offers.json`) & host crawler
