@@ -854,14 +854,32 @@ export async function runUpdate({
 
   // 3. Parano1d producer-share cross-check against a second public indexer (Noidium).
   let noidiumWindow = null;
+  let noidiumError = null;
   if (explorerResult) {
     try {
       noidiumWindow = await fetchNoidiumWindow(endpoints.noidiumBlocks, explorerResult, fetchOpts);
-    } catch {
+    } catch (err) {
       noidiumWindow = null;
+      noidiumError = err && err.message ? err.message : "error";
     }
   }
   const producerResult = crossCheckProducerShare(explorerResult, noidiumWindow);
+  // One plain line for the job log: why the share is or is not published (counts only, no URLs).
+  const diagText = (v) => String(v).replace(/[^\x20-\x7e]/g, "").slice(0, 120);
+  let shareDiag;
+  if (explorerRes.status !== "fulfilled") {
+    const reason = explorerRes.reason && explorerRes.reason.message ? explorerRes.reason.message : "error";
+    shareDiag = `explorer failed: ${diagText(reason)}`;
+  } else if (!explorerResult) {
+    shareDiag = "explorer response rejected by validation";
+  } else if (!noidiumWindow) {
+    shareDiag = `noidium failed: ${diagText(noidiumError || "error")}`;
+  } else {
+    shareDiag =
+      `explorer ${explorerResult.topProducerSharePct}% of ${explorerResult.windowBlocks}, ` +
+      `noidium ${noidiumWindow.topProducerSharePct}% of ${noidiumWindow.windowBlocks}, ` +
+      `same top address ${explorerResult.topAddress === noidiumWindow.topAddress}`;
+  }
 
   // 4. Optional ETH gas price (only when operator explicitly configures --eth-rpc / ETH_RPC_URL).
   let ethGasGwei = null;
@@ -905,7 +923,7 @@ export async function runUpdate({
       ok: false,
       skipped: false,
       reason: "all_sources_failed",
-      error: "All market sources failed or were rejected by cross-checks.",
+      error: `All market sources failed or were rejected by cross-checks (share: ${shareDiag}).`,
     };
   }
 
@@ -930,6 +948,7 @@ export async function runUpdate({
     outputPath,
     payload,
     snapshot: validated,
+    shareDiag,
   };
 }
 
@@ -1032,6 +1051,7 @@ async function main() {
       eth_usd: result.payload.eth_usd,
       noid_usd: result.payload.noid_usd,
       top_producer_share_pct: result.payload.parano1d.top_producer_share_pct,
+      share_check: result.shareDiag,
     })}\n`,
   );
 }
