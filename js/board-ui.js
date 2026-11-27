@@ -52,6 +52,9 @@ import { DEMO_OFFERS, PROTOCOL_CONSTANTS } from "./sample-offers.js";
 let unsubscribeMarketSnapshot = null;
 
 const APP_VERSION = PROTOCOL_CONSTANTS.version;
+// The desktop program (0.2.0) registers no `no1d-invite:` operating-system handler, so a launch link would do nothing or make the browser ask about an unknown scheme.
+// The launch button stays hidden until a release registers the scheme; copying the code and pasting it into Alice's New Swap form is the only route.
+const OS_INVITE_HANDLER_REGISTERED = false;
 const BOARD_WARNING = PROTOCOL_CONSTANTS.minerConcentration.boardWarning;
 const SEPOLIA_SPEC = NETWORK_SPECS.sepolia;
 
@@ -420,7 +423,7 @@ function createHandoffModalController() {
       el("h3", {
         id: titleId,
         className: "modal-title",
-        text: "Open in Desktop (no1d-invite:)",
+        text: "Open in Desktop: copy the code",
       }),
       closeBtn,
     ]);
@@ -433,13 +436,13 @@ function createHandoffModalController() {
       el("p", {
         className: "callout-body",
         text:
-          "Pre-fill only: clicking Launch no1d-invite: Link below only pre-fills Alice's New Swap form, identical to pasting the code. It never approves a swap, never sends funds, never starts a step, and never skips the out-of-band 4×4 check-line match. The OS handler lives inside the desktop program.",
+          "Pre-fill only: pasting the code only pre-fills Alice's New Swap form. It never approves a swap, never sends funds, never starts a step, and never skips the out-of-band 4×4 check-line match.",
       }),
     ]);
 
     const fallbackGuide = el("p", {
       id: descId,
-      text: `Click "Launch no1d-invite: Link" below to hand off to the desktop program, or copy the no1dinv1: code and paste it directly into Alice's New Swap form (required on releases without an OS URI handler; target release ${APP_VERSION}). Verify every amount, address, cap, and the 4×4 check line inside the desktop app.`,
+      text: `Copy the no1dinv1: code and paste it into Alice's New Swap form in the desktop program (target release ${APP_VERSION}; this release has no link handler, so there is no launch button). Verify every amount, address, cap, and the 4×4 check line inside the desktop app.`,
     });
 
     const summaryRows = [
@@ -530,7 +533,7 @@ function createHandoffModalController() {
 
     const actions = el("div", { className: "modal-actions" }, [
       copyBtn,
-      launchLink,
+      ...(OS_INVITE_HANDLER_REGISTERED ? [launchLink] : []),
       doneBtn,
     ]);
 
