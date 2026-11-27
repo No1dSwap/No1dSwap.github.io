@@ -41,9 +41,9 @@ export const NETWORK_SPECS = Object.freeze({
     pinnedContract: "0x4e364cC86EdBF307CC6F336F3a72e1a24d284D70",
     allowedContractVersions: Object.freeze([1]),
     maxNoidMicro: 2_500_000_000n,
-    maxEthWei: 500_000_000_000_000_000n,
+    maxEthWei: 1_000_000_000_000_000_000n,
     maxNoid: "2500",
-    maxEth: "0.5",
+    maxEth: "1",
   }),
   sepolia: Object.freeze({
     network: "sepolia",

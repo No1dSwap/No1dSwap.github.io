@@ -114,7 +114,7 @@ test("encodeInvite -> decodeInvite round-trips mainnet and sepolia with exact de
   const main = encodeInvite({
     network: "mainnet",
     noidAmount: "2500",
-    ethAmount: "0.5",
+    ethAmount: "1",
     bobNoid: SAMPLE_NOID,
     bobEth: SAMPLE_ETH,
   });
@@ -137,9 +137,9 @@ test("encodeInvite -> decodeInvite round-trips mainnet and sepolia with exact de
   assert.equal(decodedMain.fields.contract, NETWORK_SPECS.mainnet.pinnedContract);
   assert.equal(decodedMain.fields.contract_version, "1");
   assert.equal(decodedMain.fields.noid_amount, "2500");
-  assert.equal(decodedMain.fields.eth_amount, "0.5");
+  assert.equal(decodedMain.fields.eth_amount, "1");
   assert.equal(decodedMain.fields.noid_micronoid, "2500000000");
-  assert.equal(decodedMain.fields.eth_wei, "500000000000000000");
+  assert.equal(decodedMain.fields.eth_wei, "1000000000000000000");
   assert.equal(decodedMain.fields.bob_noid, SAMPLE_NOID);
   assert.equal(decodedMain.fields.bob_eth, SAMPLE_ETH);
 
@@ -334,11 +334,11 @@ test("enforces mainnet and sepolia caps, contract version rules, and address int
   });
   assert.equal(overMainNoid.ok, false);
 
-  // Over mainnet ETH cap (0.5 ETH)
+  // Over mainnet ETH cap (1 ETH)
   const overMainEth = encodeInvite({
     network: "mainnet",
     noidAmount: "100",
-    ethAmount: "0.500000000000000001",
+    ethAmount: "1.000000000000000001",
     bobNoid: SAMPLE_NOID,
     bobEth: SAMPLE_ETH,
   });
@@ -563,7 +563,7 @@ test("PROTOCOL_CONSTANTS and Sepolia-only DEMO_OFFERS satisfy all security & acc
     "0xf510d2a368c730339fa7cf5e023bcf2429d5732793f043e03025780bb7043ff3",
   );
   assert.equal(PROTOCOL_CONSTANTS.mainnet.maxNoid, "2500");
-  assert.equal(PROTOCOL_CONSTANTS.mainnet.maxEth, "0.5");
+  assert.equal(PROTOCOL_CONSTANTS.mainnet.maxEth, "1");
   assert.equal(PROTOCOL_CONSTANTS.sepolia.maxNoid, "20");
   assert.equal(PROTOCOL_CONSTANTS.sepolia.maxEth, "0.01");
   assert.equal(PROTOCOL_CONSTANTS.parano1d.finalityBlocks, 18);

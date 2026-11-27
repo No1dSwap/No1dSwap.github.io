@@ -28,7 +28,7 @@ export const MAX_GAS_GWEI = 1e6;
 export const MAX_CALC_AMOUNT = 1e9;
 
 const MAINNET_MAX_NOID = Number(NETWORK_SPECS.mainnet.maxNoid); // 2500
-const MAINNET_MAX_ETH = Number(NETWORK_SPECS.mainnet.maxEth); // 0.5
+const MAINNET_MAX_ETH = Number(NETWORK_SPECS.mainnet.maxEth); // 1
 const SEPOLIA_MAX_NOID = Number(NETWORK_SPECS.sepolia.maxNoid); // 20
 const SEPOLIA_MAX_ETH = Number(NETWORK_SPECS.sepolia.maxEth); // 0.01
 
@@ -615,7 +615,7 @@ function parsePositiveNumber(val, minVal, maxVal) {
 /**
  * Pure local swap estimator from user-entered amount and reference USD quotes.
  * Returns paired NOID/ETH amounts, indicative USD value, implied rates, and
- * compliance booleans against No1d Swap's mainnet (2,500 NOID / 0.5 ETH) and
+ * compliance booleans against No1d Swap's mainnet (2,500 NOID / 1 ETH) and
  * Sepolia (20 NOID / 0.01 ETH) per-swap caps.
  * @param {{amount:number|string, side:"noid"|"eth", ethUsd:number|string, noidUsd:number|string}} params
  */
@@ -654,13 +654,13 @@ export function computeSwapEstimate({ amount, side, ethUsd, noidUsd } = {}) {
   const withinSepoliaCaps = withinSepoliaNoidCap && withinSepoliaEthCap;
 
   let capStatus = "exceeds_mainnet";
-  let capLabel = "Exceeds mainnet per-swap cap (2,500 NOID / 0.5 ETH)";
+  let capLabel = "Exceeds mainnet per-swap cap (2,500 NOID / 1 ETH)";
   if (withinSepoliaCaps) {
     capStatus = "sepolia_and_mainnet";
-    capLabel = "Within Sepolia (20 NOID / 0.01 ETH) and mainnet (2,500 NOID / 0.5 ETH) caps";
+    capLabel = "Within Sepolia (20 NOID / 0.01 ETH) and mainnet (2,500 NOID / 1 ETH) caps";
   } else if (withinMainnetCaps) {
     capStatus = "mainnet_only";
-    capLabel = "Within mainnet cap (2,500 NOID / 0.5 ETH); above Sepolia cap";
+    capLabel = "Within mainnet cap (2,500 NOID / 1 ETH); above Sepolia cap";
   }
 
   return {

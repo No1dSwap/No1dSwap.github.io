@@ -554,7 +554,7 @@ test("validateOfferEvent refuses unpinned contracts, over-cap offers, invalid co
       contract: NETWORK_SPECS.mainnet.pinnedContract,
       contract_version: 1,
       noid_micronoid: "100000000",
-      eth_wei: "510000000000000000", // > 0.5 ETH
+      eth_wei: "1000000000000000001", // > 1 ETH
       bob_noid: makeTestNoidAddr(4),
       bob_eth: makeTestEthAddr(4),
     },
