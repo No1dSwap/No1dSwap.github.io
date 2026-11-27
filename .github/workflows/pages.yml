@@ -68,7 +68,7 @@ jobs:
         continue-on-error: true
         run: |
           timeout 90 node scripts/update-offers.mjs --out _site/data/offers.json --force \
-            || echo "Offers snapshot update failed; keeping last good offers.json if present."
+            || echo "::warning::Offers update failed; the last data/offers.json is kept."
           rm -f _site/data/.offers.json.*.tmp
 
       - name: Upload Pages artifact
