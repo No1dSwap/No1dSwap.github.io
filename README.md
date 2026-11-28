@@ -1,8 +1,8 @@
 # No1d Swap — Public Website & Static Bulletin Board
 
-A standalone, zero-dependency static website for **No1d Swap** (`00Para/noid-swap`, target release `0.2.0` — upcoming): documentation front door, Sepolia-only sample offer bulletin board, and browser-side `no1dinv1:` invitation code inspector and Sepolia test formatter.
+A standalone, zero-dependency static website for **No1d Swap** (`00Para/noid-swap`, release `0.2.0`): documentation front door, Sepolia-only sample offer bulletin board, and browser-side `no1dinv1:` invitation code inspector and Sepolia test formatter.
 
-> Release note: version `0.2.0` is upcoming. Once published, confirm exact installer filenames, SHA-256 digests, and verification commands against the signed `release.json` on the Releases page.
+> Release note: version `0.2.0` is published. Confirm exact installer filenames, SHA-256 digests, and verification commands against the signed `release.json` on the Releases page.
 
 ## Trust boundary
 
@@ -19,7 +19,7 @@ A standalone, zero-dependency static website for **No1d Swap** (`00Para/noid-swa
 
 > A listing is not a check. The program checks the terms; the miner limit still applies to the ETH side.
 
-- **Parano1d miner concentration:** one producer has made about **75 %** of recent Parano1d blocks (measured `2026-11-23 UTC`; 45 %–63 % per day over the earlier 20-day measurement window; 52.7 % on `2026-11-08 UTC`). Above half of the hashrate, a stranger acting as Alice can cheat Bob (the ETH seller). Since 0.2.0 the program warns Bob before he locks on Ethereum mainnet (above **35 %**, loudly above **50 %**, "unknown" when it cannot read the share) and does not refuse; above half of the blocks, a miner who is Alice can take Bob's ETH. Swap only with someone you have a reason to trust.
+- **Parano1d miner concentration:** one producer has made about **82 %** of recent Parano1d blocks (measured `2026-11-27 UTC`; 45 %–63 % per day over the earlier 20-day measurement window; 52.7 % on `2026-11-08 UTC`). Above half of the hashrate, a stranger acting as Alice can cheat Bob (the ETH seller). Since 0.2.0 the program warns Bob before he locks on Ethereum mainnet (above **35 %**, loudly above **50 %**, "unknown" when it cannot read the share) and does not refuse; above half of the blocks, a miner who is Alice can take Bob's ETH. Swap only with someone you have a reason to trust.
 - **Fake and copied offers:** anyone can post a listing; a listing's age, note, and displayed size are untrusted text. Notes are stripped of Unicode bidirectional/control/zero-width characters and length-capped before display. Duplicate detection checks both the canonical `no1dinv1:` payload and Bob's decoded addresses. Any preview added through the Sepolia test builder is kept strictly in browser memory as **Local preview only** and vanishes on reload. If public listings are later fed from Nostr relays (separate from the desktop program's private test board), the board will display each poster's public key and flag duplicate `no1dinv1:` payloads so copies of someone else's offer can be told apart.
 
 ## Preview locally
@@ -55,7 +55,7 @@ Referrer-Policy: no-referrer
 - **Offers file:** after the market step, each run fetches the live site's current `data/offers.json` (10 s, 1 MB cap) as the last good file, then runs `node scripts/update-offers.mjs --out _site/data/offers.json --force` under a 90 s timeout with soft-fail (`continue-on-error: true` and `|| echo ...`). If all relays fail or the step times out, the previous `offers.json` stays intact, any stray `.offers.json.*.tmp` file is removed, and the market update and deploy still proceed; with no previous file, the page falls back to the built-in Sepolia samples.
 - **Two sources for the top-producer share:** NoidExplorer `/api/premium/miners?range=4h` gives the 4-hour window (`from`, `to`, `blocks`, top addresses). Noidium `/api/v1/blocks?limit=500` (up to 3 pages, older ones with `&before=<lowest height>`) is read over the same window: canonical blocks only, one per height, counted per miner. Entries are validated strictly; more than 5 % invalid fails the source.
 - **Rule:** `top_producer_share_pct` is the explorer's share only if both windows hold at least 300 blocks, the top address is the same in both, and the two top shares differ by at most 3 percentage points. Otherwise, or if either source fails, it is `null` and prices are still written. `window_blocks` is the explorer's block count and `measured_at` its window end.
-- **Static warning:** next to the live share the page always shows a dated line ("Measured on 2026-11-23: one producer mined about 76 % of recent Parano1d blocks.").
+- **Static warning:** next to the live share the page always shows a dated line ("Measured on 2026-11-27: one producer mined about 82 % of recent Parano1d blocks.").
 - **Frame guard:** GitHub Pages cannot send `frame-ancestors`, so `js/site.js` replaces the page with a link to open it directly when it runs inside another page; the body stays hidden by CSS until that check has passed (`styles/noscript.css` shows it when scripting is off).
 
 ## Same-origin market snapshot (`./data/market.json`) & host cron

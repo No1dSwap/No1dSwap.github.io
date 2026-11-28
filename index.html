@@ -43,6 +43,7 @@
           <li><a class="nav-link" href="#market">Assets</a></li>
           <li><a class="nav-link" href="#how-it-works">How it works</a></li>
           <li><a class="nav-link" href="#why-desktop">Why desktop</a></li>
+          <li><a class="nav-link" href="#post-an-offer">Post an offer</a></li>
           <li><a class="nav-link" href="#bulletin-board">Bulletin board</a></li>
           <li><a class="nav-link" href="#limits">Limits &amp; risks</a></li>
           <li><a class="nav-link" href="#download">Download</a></li>
@@ -74,7 +75,8 @@
         </div>
 
         <div class="hero-actions">
-          <a class="btn btn-primary btn-lg" href="#download">Download Desktop App</a>
+          <a class="btn btn-primary btn-lg" href="https://github.com/00Para/noid-swap/releases/tag/v0.2.0" target="_blank" rel="noopener noreferrer">Download Desktop App</a>
+          <a class="btn btn-primary btn-lg" href="#post-an-offer">Post an offer</a>
           <a class="btn btn-secondary btn-lg" href="#bulletin-board">Open Bulletin Board &amp; Invite Tool</a>
         </div>
 
@@ -287,14 +289,36 @@
       </div>
     </section>
 
+    <section class="section" id="post-an-offer" aria-labelledby="post-heading">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-eyebrow">Offers board · Done in the desktop app</span>
+          <h2 class="section-title" id="post-heading">How to post an offer (Bob, the ETH side)</h2>
+          <p class="section-lead">This website cannot post for you: it never signs and holds no keys. You post from the desktop program <span data-release-version>v0.2.0</span>, and your offer shows up in the list below.</p>
+        </div>
+        <ol class="post-steps">
+          <li>Open No1d Swap and start a new swap as <strong>Bob</strong> (you have ETH and want NOID). Fill in the amounts and addresses so your invitation is made.</li>
+          <li>On Bob's swap card, press <strong>Post to the offers board</strong>.</li>
+          <li>Read the preview. It shows exactly what is published: the public invitation fields, an optional note of at most 140 characters, and a 24-hour expiry, sent to three relays (nos.lol, relay.primal.net, relay.snort.social). No secret is sent, and each offer uses a fresh posting key.</li>
+          <li>Confirm. The offer appears in the list below at the next refresh of the offers snapshot (about hourly). Sepolia offers are allowed and labelled test network.</li>
+          <li>It is marked taken by itself once Alice's funding is seen (tick box, on by default). Press <strong>Withdraw offer</strong> to close it earlier.</li>
+        </ol>
+        <p class="post-alice"><strong>Have NOID and want ETH (Alice)?</strong> You do not post. Copy an offer's <code>no1dinv1:</code> code from the list below and paste it into the New swap form of the app.</p>
+        <div class="callout callout-due" role="note" aria-label="Warnings before posting">
+          <p class="callout-body"><strong>Mining risk:</strong> about 82% of recent Parano1d blocks came from one producer (27 November 2026 UTC). Above half, a miner who is Alice can take Bob's ETH. The program warns about this but does not refuse, so keep amounts very small and swap with someone you trust.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Public Bulletin Board & Invite Code Workbench -->
     <section class="section section-alt" id="bulletin-board" aria-labelledby="board-heading">
       <div class="container">
         <div class="section-head">
           <span class="section-eyebrow">Same-origin snapshot · Read-only handoff</span>
           <h2 class="section-title" id="board-heading">Public Bulletin Board &amp; Invite Code Workbench</h2>
+          <p class="board-post-link"><a class="btn btn-primary btn-sm" href="#post-an-offer">Post an offer</a></p>
           <p class="section-lead">
-            Browse same-origin Nostr offer snapshots from <code>./data/offers.json</code> (with Sepolia-only built-in samples) and inspect or format public <code>no1dinv1:</code> invitation codes compatible with No1d Swap <span data-release-version>v0.2.0</span> (upcoming). Everything displayed here is informational only—never deposit to any address shown on a web page. The desktop program reads every term from the code and both chains itself.
+            Browse same-origin Nostr offer snapshots from <code>./data/offers.json</code> (with Sepolia-only built-in samples) and inspect or format public <code>no1dinv1:</code> invitation codes compatible with No1d Swap <span data-release-version>v0.2.0</span> . Everything displayed here is informational only—never deposit to any address shown on a web page. The desktop program reads every term from the code and both chains itself.
           </p>
         </div>
 
@@ -302,7 +326,7 @@
           <div class="callout callout-due" role="note" aria-label="Bulletin board trust boundary and miner limit">
             <span class="callout-title">A listing is not a check. The program checks the terms; the miner limit still applies to the ETH side.</span>
             <p class="callout-body">
-              Public, untrusted bulletin board. Offers listed here are unverified — the desktop app checks amounts, caps, the pinned contract, and address format locally (plus Parano1d mining share before Bob approves), not whether a counterparty is honest. One producer has recently mined about <strong>75%</strong> of Parano1d blocks (measured 2026-11-23 UTC); above half of the hashrate, a stranger acting as Alice can cheat Bob (the ETH side), and since 0.2.0 the desktop app only warns about the share (above 35%, loudly above 50%, "unknown" when it cannot read it) and does not refuse.
+              Public, untrusted bulletin board. Offers listed here are unverified — the desktop app checks amounts, caps, the pinned contract, and address format locally (plus Parano1d mining share before Bob approves), not whether a counterparty is honest. One producer has recently mined about <strong>82%</strong> of Parano1d blocks (measured 2026-11-27 UTC); above half of the hashrate, a stranger acting as Alice can cheat Bob (the ETH side), and since 0.2.0 the desktop app only warns about the share (above 35%, loudly above 50%, "unknown" when it cannot read it) and does not refuse.
             </p>
             <p class="callout-body">
               <strong>Fake and copied offers:</strong> Anyone can post. A listing's age, note, and displayed size are untrusted text. A pasted code is <strong>pre-fill only</strong> (it never approves, deposits, starts a step, or skips the check-line match); this release of the desktop program has no link handler, so the code is copied and pasted into the form. Live public offers are collected out-of-band by a host job from Nostr relays (separate from the desktop program's private test board) into same-origin <code>./data/offers.json</code>, re-validated in your browser, and shown with each poster's public key, NIP-13 PoW bits, liveness status, and explicit warnings for copied/duplicate <code>no1dinv1:</code> payloads or repeated Bob addresses.
@@ -345,7 +369,7 @@
                   <strong>1. Offline after the reveal (ETH seller / Bob):</strong> After Alice claims the ETH and reveals <code>s</code>, Bob's program has at least about <strong>75 minutes</strong> on mainnet to claim the NOID (and get it final 18 blocks before the deadline). If Bob's computer is off or disconnected past that window, Alice can recover the NOID and Bob loses the ETH.
                 </li>
                 <li class="risk-item">
-                  <strong>2. Parano1d miner concentration (ETH seller / Bob):</strong> One producer has made about <strong>75%</strong> of recent Parano1d blocks (measured 2026-11-23 UTC; earlier 20-day range <strong>45% to 63%</strong>, <strong>52.7%</strong> on 2026-11-08 UTC). Above half of the hashrate, no longer timeout protects Bob if Alice is also the majority miner. <strong>Swap only with someone you have a reason to trust.</strong> Since 0.2.0 the program warns Bob before he locks on mainnet (above <strong>35%</strong>, loudly above <strong>50%</strong>, "unknown" when it cannot read the share) and does not refuse. The risk stays: above half of the blocks, a miner who is Alice can take Bob's ETH. That is a warning, not a defence against a miner split across addresses or a share that grows later.
+                  <strong>2. Parano1d miner concentration (ETH seller / Bob):</strong> One producer has made about <strong>82%</strong> of recent Parano1d blocks (measured 2026-11-27 UTC; earlier 20-day range <strong>45% to 63%</strong>, <strong>52.7%</strong> on 2026-11-08 UTC). Above half of the hashrate, no longer timeout protects Bob if Alice is also the majority miner. <strong>Swap only with someone you have a reason to trust.</strong> Since 0.2.0 the program warns Bob before he locks on mainnet (above <strong>35%</strong>, loudly above <strong>50%</strong>, "unknown" when it cannot read the share) and does not refuse. The risk stays: above half of the blocks, a miner who is Alice can take Bob's ETH. That is a warning, not a defence against a miner split across addresses or a share that grows later.
                 </li>
                 <li class="risk-item">
                   <strong>3. No independent outside audit yet:</strong> Every review so far was internal to the project. Neither the code nor the preimage resistance of Parano1d's <code>Addr</code> hash (Poseidon2b) for this use has been audited by outside experts. Keep amounts small.
@@ -448,10 +472,10 @@
     <section class="section section-alt" id="download" aria-labelledby="download-heading">
       <div class="container">
         <div class="section-head">
-          <span class="section-eyebrow">Desktop program · <span data-release-version>v0.2.0</span> (upcoming)</span>
+          <span class="section-eyebrow">Desktop program · <span data-release-version>v0.2.0</span> </span>
           <h2 class="section-title" id="download-heading">Download &amp; verify before you open</h2>
           <p class="section-lead">
-            The release page and hosting account are not the proof; the offline Ed25519 signature on <code>release.json</code> is. If the signature or SHA-256 does not check out, do not install. Release <span data-release-version>v0.2.0</span> is upcoming—confirm exact installer filenames and verify commands against the published <code>release.json</code> once released.
+            The release page and hosting account are not the proof; the offline Ed25519 signature on <code>release.json</code> is. If the signature or SHA-256 does not check out, do not install. Release <span data-release-version>v0.2.0</span> is published—verify the installer against the signed <code>release.json</code> from that release page.
           </p>
         </div>
 
@@ -483,17 +507,17 @@
           <div class="download-body" role="tabpanel" id="panel-macos" aria-labelledby="tab-macos">
             <div class="download-cta-row">
               <div>
-                <h3>No1d Swap <span data-release-version>v0.2.0</span> (upcoming) for macOS (Apple Silicon)</h3>
+                <h3>No1d Swap <span data-release-version>v0.2.0</span>  for macOS (Apple Silicon)</h3>
                 <p class="muted">
-                  Expected disk image: <code data-installer-mac>No1d-Swap-0.2.0-mac-arm64.dmg</code> · Also download <code>release.json</code> and <code>release.json.sig</code> from the same release and confirm the exact filename inside <code>release.json</code> once published.
+                  Disk image: <code data-installer-mac>No1d-Swap-0.2.0-mac-arm64.dmg</code> · Also download <code>release.json</code> and <code>release.json.sig</code> from the same release and check the filename inside <code>release.json</code>.
                 </p>
               </div>
               <a
                 class="btn btn-primary"
-                href="https://github.com/00Para/noid-swap/releases"
+                href="https://github.com/00Para/noid-swap/releases/tag/v0.2.0"
                 target="_blank"
                 rel="noopener noreferrer"
-              >Open GitHub Releases</a>
+              >Open the v0.2.0 release</a>
             </div>
 
             <div class="pubkey-box">
@@ -577,17 +601,17 @@
           <div class="download-body" role="tabpanel" id="panel-windows" aria-labelledby="tab-windows" hidden>
             <div class="download-cta-row">
               <div>
-                <h3>No1d Swap <span data-release-version>v0.2.0</span> (upcoming) for Windows (x64)</h3>
+                <h3>No1d Swap <span data-release-version>v0.2.0</span>  for Windows (x64)</h3>
                 <p class="muted">
-                  Expected installer: <code data-installer-win>No1d-Swap-0.2.0-win-x64.exe</code> · Also download <code>release.json</code> and <code>release.json.sig</code> from the same release and confirm the exact filename inside <code>release.json</code> once published.
+                  Installer: <code data-installer-win>No1d-Swap-0.2.0-win-x64.exe</code> · Also download <code>release.json</code> and <code>release.json.sig</code> from the same release and check the filename inside <code>release.json</code>.
                 </p>
               </div>
               <a
                 class="btn btn-primary"
-                href="https://github.com/00Para/noid-swap/releases"
+                href="https://github.com/00Para/noid-swap/releases/tag/v0.2.0"
                 target="_blank"
                 rel="noopener noreferrer"
-              >Open GitHub Releases</a>
+              >Open the v0.2.0 release</a>
             </div>
 
             <div class="pubkey-box">
@@ -684,7 +708,7 @@
       </div>
 
       <nav class="footer-links" aria-label="Repository links">
-        <a href="https://github.com/00Para/noid-swap/releases" target="_blank" rel="noopener noreferrer">GitHub Releases</a>
+        <a href="https://github.com/00Para/noid-swap/releases/tag/v0.2.0" target="_blank" rel="noopener noreferrer">GitHub Releases</a>
         <a href="https://github.com/00Para/noid-swap/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">SECURITY.md</a>
         <a href="https://github.com/00Para/noid-swap" target="_blank" rel="noopener noreferrer">Source Repository</a>
       </nav>

@@ -599,7 +599,7 @@ test("DOM-free security audit: zero HTML-string sinks in JS, resolveOfferForDisp
 
   try {
     // Check market-ui.js when top_producer_share_pct is null ("Unconfirmed"):
-    // b2185ed keeps STATIC_PRODUCER_WARNING (Measured on 2026-11-23, about 75 %) right next to "Unconfirmed"
+    // b2185ed keeps STATIC_PRODUCER_WARNING (Measured on 2026-11-27, about 82 %) right next to "Unconfirmed"
     const unconfirmedSnap = parseMarketSnapshot(
       {
         v: 1,
@@ -623,8 +623,8 @@ test("DOM-free security audit: zero HTML-string sinks in JS, resolveOfferForDisp
     await mountMarketStrip({ snapshot: unconfirmedSnap });
     const marketText = marketRoot.textContent;
     assert.match(marketText, /Unconfirmed/);
-    assert.match(marketText, /about 75 ?%/);
-    assert.match(marketText, /2026-11-23/);
+    assert.match(marketText, /about 82 ?%/);
+    assert.match(marketText, /2026-11-27/);
     assert.match(marketText, /only warns about the mining share/);
     assert.doesNotMatch(marketText, /65%/);
 

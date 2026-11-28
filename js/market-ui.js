@@ -97,7 +97,7 @@ function formatUtcShort(isoStr) {
 // ---------------------------------------------------------------------------
 
 const STATIC_PRODUCER_WARNING =
-  "Measured on 2026-11-23: one producer mined about 75 % of recent Parano1d blocks.";
+  "Measured on 2026-11-27: one producer mined about 82 % of recent Parano1d blocks.";
 
 /**
  * Mounts `#market-strip-root` and loads the same-origin `./data/market.json` snapshot.

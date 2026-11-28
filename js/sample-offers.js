@@ -29,9 +29,9 @@ const REPO = "00Para/noid-swap";
 export const PROTOCOL_CONSTANTS = Object.freeze({
   productName: "No1d Swap",
   version: VERSION,
-  releaseStatus: "unreleased",
+  releaseStatus: "released",
   releaseNote:
-    "Version 0.2.0 is upcoming — check exact installer filenames, SHA-256 digests, and verification commands against the published signed release.json once released.",
+    "Version 0.2.0 is published — verify the installer filenames, SHA-256 digests, and signature against the signed release.json on the release page.",
   repo: REPO,
   releaseKey: Object.freeze({
     algorithm: "Ed25519",
@@ -108,8 +108,8 @@ export const PROTOCOL_CONSTANTS = Object.freeze({
     }),
   }),
   minerConcentration: Object.freeze({
-    recentProducerPct: "about 75%",
-    recentProducerDateUtc: "2026-11-23",
+    recentProducerPct: "about 82%",
+    recentProducerDateUtc: "2026-11-27",
     observedRangePct: "45% to 63%",
     lastDayPct: "52.7%",
     measuredDateUtc: "2026-11-08",

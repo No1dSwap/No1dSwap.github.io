@@ -2604,3 +2604,20 @@ dialog.modal::backdrop {
     padding-right: var(--s-4);
   }
 }
+
+/* Post-an-offer section */
+.post-steps {
+  max-width: 68ch;
+  margin: 0 0 var(--s-4);
+  padding-left: var(--s-5);
+  color: var(--quiet);
+  line-height: var(--lh-base);
+}
+.post-steps li { margin-bottom: var(--s-2); }
+.post-steps strong { color: var(--text); }
+.post-alice {
+  max-width: 68ch;
+  margin-bottom: var(--s-4);
+  color: var(--quiet);
+}
+.board-post-link { margin: var(--s-3) 0 var(--s-3); }

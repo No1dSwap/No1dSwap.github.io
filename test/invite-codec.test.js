@@ -555,7 +555,7 @@ test("implied rate calculation and grouping", () => {
 
 test("PROTOCOL_CONSTANTS and Sepolia-only DEMO_OFFERS satisfy all security & accuracy invariants", () => {
   assert.equal(PROTOCOL_CONSTANTS.version, "0.2.0");
-  assert.equal(PROTOCOL_CONSTANTS.releaseStatus, "unreleased");
+  assert.equal(PROTOCOL_CONSTANTS.releaseStatus, "released");
   assert.equal(PROTOCOL_CONSTANTS.releaseKey.publicKeyB64, "Thg9nhwwvqoKG4yOqiZM/PBeqT5LcrFFa7cKAHuqYxk=");
   assert.equal(PROTOCOL_CONSTANTS.mainnet.contract, "0x4e364cC86EdBF307CC6F336F3a72e1a24d284D70");
   assert.equal(
@@ -569,8 +569,8 @@ test("PROTOCOL_CONSTANTS and Sepolia-only DEMO_OFFERS satisfy all security & acc
   assert.equal(PROTOCOL_CONSTANTS.parano1d.finalityBlocks, 18);
   assert.equal(PROTOCOL_CONSTANTS.inviteFormat.uriScheme, URI_SCHEME);
   assert.equal(PROTOCOL_CONSTANTS.inviteFormat.uriPrefix, URI_PREFIX);
-  assert.equal(PROTOCOL_CONSTANTS.minerConcentration.recentProducerPct, "about 75%");
-  assert.equal(PROTOCOL_CONSTANTS.minerConcentration.recentProducerDateUtc, "2026-11-23");
+  assert.equal(PROTOCOL_CONSTANTS.minerConcentration.recentProducerPct, "about 82%");
+  assert.equal(PROTOCOL_CONSTANTS.minerConcentration.recentProducerDateUtc, "2026-11-27");
   assert.equal(
     PROTOCOL_CONSTANTS.minerConcentration.boardWarning,
     "A listing is not a check. The program checks the terms; the miner limit still applies to the ETH side.",
